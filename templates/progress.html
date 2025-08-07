@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Progress - {{ user_data.username }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    {{ user_data.username }}'s Profile
+                </h3>
+                <p class="text-muted mb-0 mt-2">
+                    Member since {{ user_data.created_at[:10] if user_data.created_at else 'Unknown' }}
+                </p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>
+                            <i class="fas fa-cogs me-2 text-primary"></i>
+                            Extracted Skills
+                        </h5>
+                        {% if user_data.skills %}
+                            <div class="skills-container">
+                                {% for skill in user_data.skills.split(',') %}
+                                    <span class="badge bg-secondary me-2 mb-2">{{ skill.strip() }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No skills extracted yet. Please update your profile.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5>
+                            <i class="fas fa-chart-bar me-2 text-success"></i>
+                            Assessment Score
+                        </h5>
+                        {% if score_data %}
+                            <div class="score-display">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="score-circle me-3">
+                                        <div class="progress" style="width: 80px; height: 80px;">
+                                            <div class="progress-bar bg-success rounded-circle d-flex align-items-center justify-content-center" 
+                                                 style="width: {{ score_data.total_score }}%; height: 100%;">
+                                                <strong>{{ score_data.total_score }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 class="mb-0">{{ score_data.total_score }}/100</h3>
+                                        <p class="text-muted mb-0">Overall Score</p>
+                                    </div>
+                                </div>
+                                
+                                {% if score_data.total_score >= 90 %}
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-trophy me-2"></i>
+                                        <strong>Excellent!</strong> Outstanding technical knowledge demonstrated.
+                                    </div>
+                                {% elif score_data.total_score >= 75 %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-thumbs-up me-2"></i>
+                                        <strong>Good Work!</strong> Solid understanding of technical concepts.
+                                    </div>
+                                {% elif score_data.total_score >= 60 %}
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-chart-line me-2"></i>
+                                        <strong>Room for Growth!</strong> Consider expanding your technical knowledge.
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-danger">
+                                        <i class="fas fa-book me-2"></i>
+                                        <strong>Keep Learning!</strong> Focus on building fundamental skills.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No assessment completed yet.</p>
+                            <a href="{{ url_for('assessment') }}" class="btn btn-primary">
+                                <i class="fas fa-clipboard-check me-1"></i>
+                                Take Assessment
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if score_data and score_data.responses %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-eye me-2"></i>
+                    Assessment Responses
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="responsesAccordion">
+                    {% set questions = [
+                        "Problem Solving & Algorithms",
+                        "Technology Stack & Tools", 
+                        "Database & Data Management",
+                        "Software Development Practices",
+                        "Recent Project & Challenges"
+                    ] %}
+                    
+                    {% for i in range(1, 6) %}
+                        {% set question_key = 'question' + i|string %}
+                        {% if score_data.responses[question_key] %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ i }}">
+                                    <button class="accordion-button {% if i != 1 %}collapsed{% endif %}" 
+                                            type="button" data-bs-toggle="collapse" 
+                                            data-bs-target="#collapse{{ i }}">
+                                        <strong>{{ i }}. {{ questions[i-1] }}</strong>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ i }}" 
+                                     class="accordion-collapse collapse {% if i == 1 %}show{% endif %}" 
+                                     data-bs-parent="#responsesAccordion">
+                                    <div class="accordion-body">
+                                        <div class="response-text">
+                                            {{ score_data.responses[question_key] }}
+                                        </div>
+                                        <div class="response-stats mt-3">
+                                            <small class="text-muted">
+                                                <i class="fas fa-font me-1"></i>
+                                                {{ score_data.responses[question_key].split()|length }} words
+                                                <i class="fas fa-align-left me-1 ms-3"></i>
+                                                {{ score_data.responses[question_key]|length }} characters
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-dark">
+            <div class="card-body text-center">
+                <h5 class="card-title">What's Next?</h5>
+                <p class="card-text">Ready to improve your skills or retake the assessment?</p>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-1"></i>
+                        Update Profile
+                    </a>
+                    <a href="{{ url_for('assessment') }}" class="btn btn-primary">
+                        <i class="fas fa-redo me-1"></i>
+                        Retake Assessment
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.score-circle .progress {
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+}
+
+.score-circle .progress-bar {
+    border-radius: 50%;
+    position: relative;
+}
+
+.response-text {
+    background-color: var(--bs-gray-100);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+
+.skills-container .badge {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.response-stats {
+    border-top: 1px solid var(--bs-border-color);
+    padding-top: 0.75rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Skill Assessment Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="hero-section text-center py-5">
+            <h1 class="display-4 mb-4">
+                <i class="fas fa-brain text-primary me-3"></i>
+                AI-Powered Skill Assessment
+            </h1>
+            <p class="lead mb-4">
+                Discover your technical skills through intelligent resume analysis and automated assessments.
+                Our platform uses advanced AI to evaluate your capabilities and provide personalized insights.
+            </p>
+            <div class="row justify-content-center mt-5">
+                <div class="col-md-8">
+                    <div class="d-grid gap-3 d-md-flex justify-content-md-center">
+                        <a href="{{ url_for('profile') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Create Profile
+                        </a>
+                        <a href="{{ url_for('assessment') }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-clipboard-check me-2"></i>
+                            Take Assessment
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-file-text fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Resume Analysis</h5>
+                <p class="card-text">
+                    Upload your resume and let our AI extract your key technical skills using 
+                    advanced natural language processing.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-tasks fa-3x text-success"></i>
+                </div>
+                <h5 class="card-title">Smart Assessment</h5>
+                <p class="card-text">
+                    Take our comprehensive quiz and receive automated scoring based on 
+                    your responses and technical depth.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-chart-line fa-3x text-info"></i>
+                </div>
+                <h5 class="card-title">Progress Tracking</h5>
+                <p class="card-text">
+                    Monitor your skill development and assessment scores with detailed 
+                    progress reports and insights.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card bg-dark">
+            <div class="card-body text-center py-5">
+                <h3 class="card-title">How It Works</h3>
+                <div class="row mt-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="step-number mb-3">
+                            <span class="badge bg-primary rounded-circle p-3">1</span>
+                        </div>
+                        <h6>Create Profile</h6>
+                        <p class="text-muted">Submit your resume for AI analysis</p>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="step-number mb-3">
+                            <span class="badge bg-primary rounded-circle p-3">2</span>
+                        </div>
+                        <h6>Skill Extraction</h6>
+                        <p class="text-muted">Our AI identifies your key skills</p>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="step-number mb-3">
+                            <span class="badge bg-primary rounded-circle p-3">3</span>
+                        </div>
+                        <h6>Take Assessment</h6>
+                        <p class="text-muted">Complete our comprehensive quiz</p>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="step-number mb-3">
+                            <span class="badge bg-primary rounded-circle p-3">4</span>
+                        </div>
+                        <h6>View Results</h6>
+                        <p class="text-muted">Get your personalized score and insights</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

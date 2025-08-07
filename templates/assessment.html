@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment - Skill Assessment Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    Technical Skill Assessment
+                </h3>
+                {% if username %}
+                    <p class="text-muted mb-0 mt-2">Welcome, {{ username }}!</p>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Instructions:</strong> Answer all questions thoughtfully. Your responses will be analyzed 
+                    for technical depth, problem-solving approach, and overall completeness. Take your time!
+                </div>
+                
+                <form method="POST" action="{{ url_for('assessment') }}">
+                    <div class="mb-4">
+                        <label for="question1" class="form-label">
+                            <strong>1. Problem Solving & Algorithms</strong>
+                        </label>
+                        <p class="text-muted">
+                            Describe your approach to solving a complex programming problem. 
+                            Include your problem-solving methodology and any specific algorithms you prefer.
+                        </p>
+                        <textarea class="form-control" id="question1" name="question1" rows="4" 
+                                  placeholder="Describe your problem-solving approach..." required></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="question2" class="form-label">
+                            <strong>2. Technology Stack & Tools</strong>
+                        </label>
+                        <p class="text-muted">
+                            What programming languages, frameworks, and development tools are you most 
+                            comfortable with? Explain why you chose them and in what contexts you use them.
+                        </p>
+                        <textarea class="form-control" id="question2" name="question2" rows="4" 
+                                  placeholder="Discuss your preferred technology stack..." required></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="question3" class="form-label">
+                            <strong>3. Database & Data Management</strong>
+                        </label>
+                        <p class="text-muted">
+                            Describe your experience with databases. How do you approach database design, 
+                            optimization, and handling large datasets?
+                        </p>
+                        <textarea class="form-control" id="question3" name="question3" rows="4" 
+                                  placeholder="Share your database experience..." required></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="question4" class="form-label">
+                            <strong>4. Software Development Practices</strong>
+                        </label>
+                        <p class="text-muted">
+                            How do you ensure code quality? Discuss your experience with testing, 
+                            version control, code reviews, and development methodologies.
+                        </p>
+                        <textarea class="form-control" id="question4" name="question4" rows="4" 
+                                  placeholder="Explain your development practices..." required></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="question5" class="form-label">
+                            <strong>5. Recent Project & Challenges</strong>
+                        </label>
+                        <p class="text-muted">
+                            Describe a recent challenging project you worked on. What technologies did you use, 
+                            what problems did you encounter, and how did you overcome them?
+                        </p>
+                        <textarea class="form-control" id="question5" name="question5" rows="4" 
+                                  placeholder="Describe a recent project..." required></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Back to Profile
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-calculator me-1"></i>
+                            Submit Assessment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Scoring Criteria
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-1">
+                                <i class="fas fa-star text-warning me-2"></i>
+                                Response depth and detail
+                            </li>
+                            <li class="mb-1">
+                                <i class="fas fa-star text-warning me-2"></i>
+                                Technical terminology usage
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-1">
+                                <i class="fas fa-star text-warning me-2"></i>
+                                Problem-solving approach
+                            </li>
+                            <li class="mb-1">
+                                <i class="fas fa-star text-warning me-2"></i>
+                                Real-world experience examples
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Track completion progress
+document.addEventListener('DOMContentLoaded', function() {
+    const textareas = document.querySelectorAll('textarea');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    function updateProgress() {
+        const completed = Array.from(textareas).filter(ta => ta.value.trim().length > 10).length;
+        const total = textareas.length;
+        const percentage = (completed / total) * 100;
+        
+        if (completed === total) {
+            submitBtn.classList.remove('btn-outline-primary');
+            submitBtn.classList.add('btn-primary');
+            submitBtn.innerHTML = '<i class="fas fa-calculator me-1"></i>Submit Assessment';
+        } else {
+            submitBtn.innerHTML = `<i class="fas fa-edit me-1"></i>Complete ${total - completed} more questions`;
+        }
+    }
+    
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', updateProgress);
+    });
+    
+    updateProgress();
+});
+
+// Form submission confirmation
+document.querySelector('form').addEventListener('submit', function(e) {
+    if (!confirm('Are you sure you want to submit your assessment? This action cannot be undone.')) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

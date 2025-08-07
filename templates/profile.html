@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Create Profile - Skill Assessment Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Create Your Profile
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Upload your resume and let our AI analyze your technical skills. 
+                    The more detailed your resume, the better our analysis will be.
+                </p>
+                
+                <form method="POST" action="{{ url_for('profile') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user me-1"></i>
+                            Username *
+                        </label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               placeholder="Enter your username" required>
+                        <div class="form-text">Choose a unique username for your profile.</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="resume" class="form-label">
+                            <i class="fas fa-file-text me-1"></i>
+                            Resume Content *
+                        </label>
+                        <textarea class="form-control" id="resume" name="resume" rows="12" 
+                                  placeholder="Paste your resume content here..." required></textarea>
+                        <div class="form-text">
+                            Include your experience, skills, education, and projects. 
+                            Our AI will analyze this content to identify your technical abilities.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Back to Home
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-brain me-1"></i>
+                            Analyze Resume
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    What happens next?
+                </h6>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Our AI will extract key technical skills from your resume
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        You'll be redirected to take a comprehensive assessment
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Receive personalized feedback and scoring
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('resume').addEventListener('paste', function(e) {
+    setTimeout(function() {
+        const content = e.target.value;
+        if (content.length > 50) {
+            const wordCount = content.split(/\s+/).length;
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'alert alert-info mt-2';
+            statusDiv.innerHTML = `<i class="fas fa-info-circle me-2"></i>Resume content: ${wordCount} words. Good length for analysis!`;
+            
+            // Remove any existing status
+            const existing = document.querySelector('.resume-status');
+            if (existing) {
+                existing.remove();
+            }
+            
+            statusDiv.className += ' resume-status';
+            e.target.parentNode.appendChild(statusDiv);
+        }
+    }, 100);
+});
+</script>
+{% endblock %}
