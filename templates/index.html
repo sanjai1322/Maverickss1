@@ -118,4 +118,20 @@
         </div>
     </div>
 </div>
+
+<!-- Tour trigger button (hidden by default, shows after tour is completed) -->
+<button class="tour-trigger" onclick="startOnboardingTour()" style="display: none;" id="tour-trigger">
+    <i class="fas fa-question-circle me-2"></i>
+    Take Tour
+</button>
+
+<script>
+// Show tour trigger button if user has completed tour
+if (localStorage.getItem('mavericks_tour_completed') === 'true') {
+    const triggerBtn = document.getElementById('tour-trigger');
+    if (triggerBtn) {
+        triggerBtn.style.display = 'block';
+    }
+}
+</script>
 {% endblock %}

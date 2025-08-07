@@ -365,6 +365,189 @@ body {
     to { opacity: 1; }
 }
 
+/* Onboarding Tour Styles */
+.onboarding-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.onboarding-tooltip {
+    position: fixed;
+    background: rgba(30, 41, 59, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--maverick-primary);
+    border-radius: 12px;
+    padding: 0;
+    max-width: 350px;
+    box-shadow: var(--maverick-shadow-lg);
+    pointer-events: auto;
+    z-index: 10000;
+    animation: tooltipFadeIn 0.3s ease;
+}
+
+.onboarding-tooltip::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 8px solid transparent;
+}
+
+.onboarding-tooltip.position-bottom::before {
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-bottom-color: var(--maverick-primary);
+}
+
+.onboarding-tooltip.position-top::before {
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-top-color: var(--maverick-primary);
+}
+
+.onboarding-tooltip.position-right::before {
+    top: 50%;
+    left: -16px;
+    transform: translateY(-50%);
+    border-right-color: var(--maverick-primary);
+}
+
+.onboarding-tooltip.position-left::before {
+    top: 50%;
+    right: -16px;
+    transform: translateY(-50%);
+    border-left-color: var(--maverick-primary);
+}
+
+.tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1rem 0.5rem;
+    border-bottom: 1px solid var(--maverick-border);
+}
+
+.tooltip-title {
+    color: white;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.btn-close-tour {
+    background: none;
+    border: none;
+    color: #cbd5e1;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-close-tour:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tooltip-content {
+    padding: 1rem;
+    color: #cbd5e1;
+    line-height: 1.5;
+}
+
+.tooltip-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--maverick-border);
+}
+
+.step-indicator {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.current-step {
+    color: var(--maverick-primary);
+    font-weight: 600;
+}
+
+.tooltip-buttons .btn {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.onboarding-highlight {
+    position: relative;
+    z-index: 9998;
+    box-shadow: 0 0 0 4px var(--maverick-primary), 0 0 0 8px rgba(59, 130, 246, 0.3) !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease;
+}
+
+.onboarding-complete-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10001;
+    animation: slideInRight 0.5s ease;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Tour trigger button */
+.tour-trigger {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--maverick-gradient);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: var(--maverick-shadow);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.tour-trigger:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--maverick-shadow-lg);
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .hero-title {

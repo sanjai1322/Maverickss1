@@ -15,6 +15,7 @@ Branding: "Mavericks" with rocket theme and blue gradient color scheme.
 - **Static Assets**: Vanilla JavaScript for interactivity, Font Awesome icons for visual elements
 - **Navigation**: Multi-page application with profile creation, assessment taking, and progress tracking
 - **Form Handling**: Client-side validation with auto-save functionality and character counters
+- **Onboarding System**: Interactive guided tour with tooltip overlays and step-by-step navigation
 
 ## Backend Architecture
 - **Web Framework**: Flask with CORS enabled for API compatibility
@@ -35,11 +36,12 @@ Branding: "Mavericks" with rocket theme and blue gradient color scheme.
 - **Performance**: Models loaded at application startup for faster response times
 
 ## Application Flow
+- **Onboarding**: Interactive guided tour for new users explaining platform features
 - **Profile Creation**: Users submit username and resume text for AI analysis
 - **Skill Extraction**: NLP models process resume content to identify technical skills
 - **Assessment**: Multi-question technical evaluation with open-ended responses
 - **Progress Tracking**: Dashboard displaying extracted skills and assessment scores
-- **Data Persistence**: All user data and results stored in SQLite for session continuity
+- **Data Persistence**: All user data and results stored in PostgreSQL for session continuity
 
 # External Dependencies
 
