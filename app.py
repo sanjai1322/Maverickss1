@@ -10,6 +10,7 @@ import PyPDF2
 from docx import Document
 from io import BytesIO
 from datetime import datetime
+from ai_course_generator import CourseGenerator
 
 # Set up logging to see what's happening
 logging.basicConfig(level=logging.DEBUG)
@@ -260,6 +261,9 @@ def profile():
                 if updated_user:
                     updated_user.learning_path_generated_at = datetime.utcnow()
                     db.session.commit()
+            
+            # Generate tailored courses using AI
+            generate_tailored_courses(username, resume_text, skills)
             
             session['username'] = username
             return redirect(url_for('assessment'))
@@ -694,6 +698,213 @@ def api_leaderboard():
     except Exception as e:
         logger.error(f"Error in API leaderboard: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
+
+# Tailored Courses Routes
+@app.route('/tailored-courses')
+def tailored_courses():
+    """Display user's AI-generated tailored courses."""
+    username = session.get('username')
+    if not username:
+        flash('Please create a profile first.', 'warning')
+        return redirect(url_for('profile'))
+    
+    try:
+        from models import TailoredCourse, CourseModule
+        
+        # Get user's tailored courses
+        courses = TailoredCourse.query.filter_by(username=username, is_active=True).all()
+        
+        # Calculate overview statistics
+        active_courses = len(courses)
+        overall_progress = sum(course.completion_percentage for course in courses) / len(courses) if courses else 0
+        completed_modules = sum(1 for course in courses for module in course.modules if module.is_completed)
+        
+        return render_template('tailored_courses.html',
+                             courses=courses,
+                             active_courses=active_courses,
+                             overall_progress=overall_progress,
+                             completed_modules=completed_modules)
+        
+    except Exception as e:
+        logger.error(f"Error loading tailored courses: {str(e)}")
+        flash('An error occurred while loading your courses.', 'error')
+        return redirect(url_for('index'))
+
+
+def generate_tailored_courses(username, resume_text, skills):
+    """Generate AI-powered tailored courses based on resume analysis."""
+    try:
+        from models import TailoredCourse, CourseModule
+        
+        # Initialize AI course generator
+        course_generator = CourseGenerator()
+        
+        # Analyze resume with AI
+        skill_analysis = course_generator.analyze_resume_skills(resume_text)
+        
+        # Generate course plan based on analysis
+        course_plan = course_generator.generate_course_plan(skill_analysis)
+        
+        # Clear existing tailored courses for the user
+        TailoredCourse.query.filter_by(username=username).delete()
+        
+        # Create the main tailored course
+        tailored_course = TailoredCourse(
+            username=username,
+            course_title=course_plan.get('learning_path', {}).get('title', 'Personalized Development Path'),
+            course_description=f"AI-generated course based on your resume analysis and skill assessment",
+            difficulty_level=course_plan.get('learning_path', {}).get('difficulty', 'intermediate'),
+            estimated_duration=course_plan.get('learning_path', {}).get('duration', '12 weeks'),
+            course_plan=json.dumps(course_plan),
+            skill_focus=json.dumps(skill_analysis.get('extracted_skills', [])),
+            is_active=True,
+            completion_percentage=0.0
+        )
+        
+        db.session.add(tailored_course)
+        db.session.flush()  # Get the ID
+        
+        # Create course modules
+        courses = course_plan.get('courses', [])
+        for course_idx, course in enumerate(courses[:3]):  # Limit to 3 main courses
+            modules = course.get('modules', [])
+            for module_idx, module in enumerate(modules[:5]):  # 5 modules per course
+                course_module = CourseModule(
+                    tailored_course_id=tailored_course.id,
+                    module_title=module.get('title', f'Module {module_idx + 1}'),
+                    module_description=f"Learn {module.get('title', 'essential concepts')} through interactive exercises and real-world examples",
+                    module_order=module_idx + 1,
+                    resources=json.dumps(module.get('resources', [])),
+                    estimated_time=60 + (module_idx * 15),  # 60-120 minutes per module
+                    is_completed=False
+                )
+                db.session.add(course_module)
+        
+        db.session.commit()
+        logger.info(f"Generated tailored course for {username} with AI analysis")
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error generating tailored courses: {str(e)}")
+        # Create fallback course if AI fails
+        create_fallback_course(username, skills)
+
+
+def create_fallback_course(username, skills):
+    """Create a fallback course when AI generation fails."""
+    try:
+        from models import TailoredCourse, CourseModule
+        
+        # Parse skills
+        if isinstance(skills, str):
+            try:
+                skills_list = json.loads(skills)
+            except json.JSONDecodeError:
+                skills_list = skills.split(', ')
+        else:
+            skills_list = skills if isinstance(skills, list) else []
+        
+        tailored_course = TailoredCourse(
+            username=username,
+            course_title="Full Stack Development Mastery",
+            course_description="Comprehensive course covering modern web development technologies and best practices",
+            difficulty_level="intermediate",
+            estimated_duration="10 weeks",
+            course_plan=json.dumps({"type": "fallback", "skills": skills_list}),
+            skill_focus=json.dumps(skills_list),
+            is_active=True,
+            completion_percentage=0.0
+        )
+        
+        db.session.add(tailored_course)
+        db.session.flush()
+        
+        # Create basic modules
+        modules = [
+            {"title": "Programming Fundamentals", "desc": "Master core programming concepts"},
+            {"title": "Web Development Basics", "desc": "Learn HTML, CSS, and JavaScript"},
+            {"title": "Backend Development", "desc": "Server-side programming and databases"},
+            {"title": "Frontend Frameworks", "desc": "Modern frontend development"},
+            {"title": "Project Development", "desc": "Build real-world applications"}
+        ]
+        
+        for idx, module in enumerate(modules):
+            course_module = CourseModule(
+                tailored_course_id=tailored_course.id,
+                module_title=module["title"],
+                module_description=module["desc"],
+                module_order=idx + 1,
+                resources=json.dumps([]),
+                estimated_time=75 + (idx * 15),
+                is_completed=False
+            )
+            db.session.add(course_module)
+        
+        db.session.commit()
+        logger.info(f"Created fallback course for {username}")
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error creating fallback course: {str(e)}")
+
+
+@app.route('/api/progress-data')
+def api_progress_data():
+    """API endpoint for progress tracking data."""
+    username = session.get('username')
+    if not username:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    try:
+        from models import ProgressTracking
+        
+        # Get progress data for charts
+        progress_records = ProgressTracking.query.filter_by(username=username).order_by(ProgressTracking.timestamp).all()
+        
+        timeline = []
+        current_progress = 0
+        
+        for record in progress_records:
+            current_progress += record.completion_rate
+            timeline.append({
+                'date': record.timestamp.strftime('%m/%d'),
+                'progress': min(100, current_progress)
+            })
+        
+        return jsonify({'timeline': timeline})
+        
+    except Exception as e:
+        logger.error(f"Error getting progress data: {str(e)}")
+        return jsonify({'timeline': []})
+
+
+@app.route('/api/recent-activities')
+def api_recent_activities():
+    """API endpoint for recent learning activities."""
+    username = session.get('username')
+    if not username:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    try:
+        from models import ProgressTracking
+        
+        # Get recent activities
+        activities = ProgressTracking.query.filter_by(username=username).order_by(ProgressTracking.timestamp.desc()).limit(10).all()
+        
+        activity_list = []
+        for activity in activities:
+            activity_list.append({
+                'type': activity.activity_type.replace('_', ' ').title(),
+                'time': activity.timestamp.strftime('%m/%d %H:%M'),
+                'score': activity.score
+            })
+        
+        return jsonify({'activities': activity_list})
+        
+    except Exception as e:
+        logger.error(f"Error getting recent activities: {str(e)}")
+        return jsonify({'activities': []})
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

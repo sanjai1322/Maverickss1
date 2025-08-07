@@ -1,6 +1,6 @@
 # Overview
 
-The Skill Assessment Platform is an AI-powered web application that analyzes resumes and conducts technical skill assessments. The system extracts technical skills from resume text using natural language processing and provides interactive assessments to evaluate candidates' technical capabilities. Built with Flask and utilizing Hugging Face transformers, the platform offers a complete solution for skill evaluation and progress tracking.
+The Skill Assessment Platform "Mavericks" is an AI-powered web application that analyzes resumes and conducts technical skill assessments. The system extracts technical skills from resume text using AI and provides interactive assessments to evaluate candidates' technical capabilities. Now featuring AI-powered tailored course recommendations with real-time progress tracking, built with Flask and PostgreSQL for comprehensive skill development and monitoring.
 
 # User Preferences
 
@@ -24,22 +24,32 @@ Branding: "Mavericks" with rocket theme and blue gradient color scheme.
 - **Request Processing**: Form-based data submission with flash messaging for user feedback
 
 ## Database Design
-- **Storage**: SQLite database with single users table
-- **Schema**: Users store username, extracted skills (JSON string), assessment scores (JSON string), resume text, and timestamps
-- **Data Format**: Skills and scores stored as JSON strings for flexible data structure
-- **Connection Management**: Context-based database connections with row factory for easier data access
+- **Storage**: PostgreSQL database with comprehensive user management and course tracking
+- **Schema**: 
+  - Users: Store username, extracted skills, assessment scores, resume text, and timestamps
+  - TailoredCourse: AI-generated courses with completion tracking
+  - CourseModule: Individual learning modules within courses
+  - ProgressTracking: Real-time activity and progress monitoring
+  - LearningPath: Traditional learning path modules
+  - Hackathon: Challenge submissions and scoring
+- **Data Format**: Skills and course data stored as JSON strings for flexible structure
+- **Connection Management**: SQLAlchemy ORM with connection pooling and pre-ping for reliability
 
 ## AI/ML Components
-- **Text Analysis**: Transformer models for resume parsing and skill extraction
+- **Resume Analysis**: OpenRouter API (openai/gpt-oss-20b:free) for advanced resume parsing and skill extraction
+- **Course Generation**: AI-powered creation of personalized learning paths based on skill gaps
+- **Progress Analytics**: Real-time AI feedback and adaptive recommendations
 - **Assessment Scoring**: Automated evaluation of assessment responses
-- **Model Loading**: Pre-trained models from Hugging Face including sentence transformers and text generation models
-- **Performance**: Models loaded at application startup for faster response times
+- **Fallback Systems**: Local processing when AI services are unavailable
+- **Performance**: Efficient API integration with error handling and fallback mechanisms
 
 ## Application Flow
 - **Onboarding**: Interactive guided tour for new users explaining platform features
 - **Profile Creation**: Users submit username and resume text for AI analysis
-- **Skill Extraction**: NLP models process resume content to identify technical skills
+- **Skill Extraction**: AI models process resume content to identify technical skills
 - **Assessment**: Multi-question technical evaluation with open-ended responses
+- **AI Course Generation**: Personalized learning paths created based on resume analysis
+- **Real-time Progress Tracking**: Monitor learning activities and course completion
 - **Progress Tracking**: Dashboard displaying extracted skills and assessment scores
 - **Data Persistence**: All user data and results stored in PostgreSQL for session continuity
 

@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block title %}Your Tailored Courses - Mavericks{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="fas fa-graduation-cap me-2 text-primary"></i>
+                        Your Tailored Learning Path
+                    </h2>
+                    <p class="text-muted mb-0">AI-powered courses designed specifically for your skill development</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-primary fs-6 px-3 py-2">
+                        <i class="fas fa-brain me-1"></i>
+                        AI-Powered
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if courses %}
+    <!-- Course Progress Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary">
+                <div class="card-body text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="card-title mb-2">Your Learning Journey</h5>
+                            <p class="card-text mb-3">Track your progress across all tailored courses</p>
+                            <div class="d-flex gap-4">
+                                <div>
+                                    <div class="h4 mb-0">{{ active_courses }}</div>
+                                    <small>Active Courses</small>
+                                </div>
+                                <div>
+                                    <div class="h4 mb-0">{{ overall_progress }}%</div>
+                                    <small>Overall Progress</small>
+                                </div>
+                                <div>
+                                    <div class="h4 mb-0">{{ completed_modules }}</div>
+                                    <small>Modules Completed</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-white" style="width: {{ overall_progress }}%"></div>
+                            </div>
+                            <small class="mt-2 d-block">Overall Completion</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Courses -->
+    <div class="row">
+        {% for course in courses %}
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 course-card" data-course-id="{{ course.id }}">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-book-open me-2"></i>
+                        {{ course.course_title }}
+                    </h6>
+                    <span class="badge bg-{{ 'success' if course.completion_percentage == 100 else 'warning' if course.completion_percentage > 0 else 'secondary' }}">
+                        {{ course.difficulty_level }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted mb-3">{{ course.course_description }}</p>
+                    
+                    <!-- Course Progress -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted">Progress</small>
+                            <small class="text-muted">{{ "%.1f"|format(course.completion_percentage) }}%</small>
+                        </div>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar bg-primary" style="width: {{ course.completion_percentage }}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Course Details -->
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <i class="fas fa-clock text-primary"></i>
+                                <div class="small text-muted">Duration</div>
+                                <div class="fw-bold">{{ course.estimated_duration }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <i class="fas fa-list text-primary"></i>
+                                <div class="small text-muted">Modules</div>
+                                <div class="fw-bold">5</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <i class="fas fa-target text-primary"></i>
+                                <div class="small text-muted">Skills</div>
+                                <div class="fw-bold">3</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary flex-fill" onclick="startCourse({{ course.id }})">
+                            <i class="fas fa-play me-1"></i>
+                            {{ 'Continue' if course.completion_percentage > 0 else 'Start Course' }}
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="viewCourseDetails({{ course.id }})">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Real-time Progress Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Real-time Learning Analytics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <canvas id="progressChart" height="100"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="recent-activities">
+                                <h6 class="mb-3">Recent Activities</h6>
+                                <div id="recentActivities">
+                                    <!-- Activities will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- No Courses Yet -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card text-center py-5">
+                <div class="card-body">
+                    <i class="fas fa-graduation-cap text-muted mb-3" style="font-size: 3rem;"></i>
+                    <h4 class="card-title">No Tailored Courses Yet</h4>
+                    <p class="card-text text-muted mb-4">Upload your resume first to get AI-powered course recommendations</p>
+                    <a href="{{ url_for('profile') }}" class="btn btn-primary">
+                        <i class="fas fa-upload me-2"></i>
+                        Upload Resume
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Course Detail Modal -->
+<div class="modal fade" id="courseDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Course Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="courseDetailContent">
+                <!-- Course details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Real-time progress tracking
+let progressChart;
+let activityUpdateInterval;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeProgressChart();
+    startRealTimeTracking();
+    loadRecentActivities();
+});
+
+function initializeProgressChart() {
+    const ctx = document.getElementById('progressChart');
+    if (!ctx) return;
+    
+    progressChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Learning Progress',
+                data: [],
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+    
+    loadProgressData();
+}
+
+function startRealTimeTracking() {
+    // Update progress every 30 seconds
+    activityUpdateInterval = setInterval(() => {
+        loadProgressData();
+        loadRecentActivities();
+    }, 30000);
+}
+
+function loadProgressData() {
+    fetch('/api/progress-data')
+        .then(response => response.json())
+        .then(data => {
+            if (progressChart && data.timeline) {
+                progressChart.data.labels = data.timeline.map(d => d.date);
+                progressChart.data.datasets[0].data = data.timeline.map(d => d.progress);
+                progressChart.update();
+            }
+        })
+        .catch(error => console.log('Progress data unavailable'));
+}
+
+function loadRecentActivities() {
+    fetch('/api/recent-activities')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('recentActivities');
+            if (container && data.activities) {
+                container.innerHTML = data.activities.map(activity => `
+                    <div class="activity-item mb-2 p-2 border-start border-primary border-3">
+                        <div class="small fw-bold">${activity.type}</div>
+                        <div class="small text-muted">${activity.time}</div>
+                        ${activity.score ? `<div class="small text-success">Score: ${activity.score}%</div>` : ''}
+                    </div>
+                `).join('');
+            }
+        })
+        .catch(error => console.log('Recent activities unavailable'));
+}
+
+function startCourse(courseId) {
+    window.location.href = `/tailored-courses/${courseId}/learn`;
+}
+
+function viewCourseDetails(courseId) {
+    fetch(`/api/course-details/${courseId}`)
+        .then(response => response.json())
+        .then(data => {
+            const modal = new bootstrap.Modal(document.getElementById('courseDetailModal'));
+            document.getElementById('courseDetailContent').innerHTML = `
+                <h6>Course Modules</h6>
+                <div class="list-group">
+                    ${data.modules.map(module => `
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">${module.title}</h6>
+                                <p class="mb-1 text-muted">${module.description}</p>
+                                <small>${module.estimated_time} minutes</small>
+                            </div>
+                            <span class="badge bg-${module.is_completed ? 'success' : 'secondary'}">
+                                ${module.is_completed ? 'Completed' : 'Not Started'}
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            modal.show();
+        })
+        .catch(error => console.log('Course details unavailable'));
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    if (activityUpdateInterval) {
+        clearInterval(activityUpdateInterval);
+    }
+});
+</script>
+
+<style>
+.course-card {
+    transition: all 0.3s ease;
+    border: 1px solid var(--maverick-border);
+}
+
+.course-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--maverick-shadow-lg);
+    border-color: var(--maverick-primary);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item i {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.activity-item {
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: 6px;
+}
+
+.bg-gradient-primary {
+    background: var(--maverick-gradient);
+}
+</style>
+{% endblock %}
