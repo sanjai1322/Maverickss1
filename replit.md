@@ -5,6 +5,8 @@ The Skill Assessment Platform is an AI-powered web application that analyzes res
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+UI Design: Clean, professional interface with Poppins font and subtle animations.
+Branding: "Mavericks" with rocket theme and blue gradient color scheme.
 
 # System Architecture
 

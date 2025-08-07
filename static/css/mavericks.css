@@ -1,8 +1,8 @@
-/* Mavericks - Modern AI Skill Assessment Platform */
+/* Mavericks - Professional AI Skill Assessment Platform */
 
 :root {
-    --maverick-primary: #6366f1;
-    --maverick-secondary: #8b5cf6;
+    --maverick-primary: #3b82f6;
+    --maverick-secondary: #1e40af;
     --maverick-accent: #06b6d4;
     --maverick-success: #10b981;
     --maverick-warning: #f59e0b;
@@ -12,22 +12,21 @@
     --maverick-light: #f8fafc;
     --maverick-gray: #64748b;
     --maverick-border: #334155;
-    --maverick-gradient: linear-gradient(135deg, var(--maverick-primary) 0%, var(--maverick-secondary) 50%, var(--maverick-accent) 100%);
-    --maverick-glass: rgba(255, 255, 255, 0.1);
-    --maverick-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    --maverick-shadow-lg: 0 35px 60px -12px rgba(0, 0, 0, 0.4);
+    --maverick-gradient: linear-gradient(135deg, var(--maverick-primary) 0%, var(--maverick-secondary) 100%);
+    --maverick-glass: rgba(255, 255, 255, 0.05);
+    --maverick-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --maverick-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 body {
     background: var(--maverick-darker);
     background-image: 
-        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.15) 0%, transparent 50%);
+        radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(30, 64, 175, 0.05) 0%, transparent 50%);
     min-height: 100vh;
     overflow-x: hidden;
 }
@@ -55,12 +54,9 @@ body {
 }
 
 .brand-logo i {
-    background: var(--maverick-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-size: 2rem;
-    animation: rocketPulse 2s ease-in-out infinite;
+    color: var(--maverick-primary);
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
 }
 
 .brand-text {
@@ -68,13 +64,8 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: -0.025em;
-}
-
-@keyframes rocketPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
 }
 
 /* Navigation Links */
@@ -113,71 +104,42 @@ body {
 /* Hero Section */
 .hero-section {
     position: relative;
-    padding: 6rem 0;
+    padding: 4rem 0;
     overflow: hidden;
 }
 
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--maverick-gradient);
-    opacity: 0.1;
-    border-radius: 50px;
-    transform: rotate(-5deg) scale(1.2);
-    z-index: -1;
-}
-
 .hero-title {
-    font-size: 4rem;
-    font-weight: 800;
-    line-height: 1.1;
-    margin-bottom: 2rem;
-    background: var(--maverick-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 3rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    color: white;
 }
 
 .hero-subtitle {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     color: #cbd5e1;
-    line-height: 1.7;
-    margin-bottom: 3rem;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
     font-weight: 400;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Cards */
 .card {
-    background: rgba(30, 41, 59, 0.8);
-    backdrop-filter: blur(20px);
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--maverick-border);
-    border-radius: 20px;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 
-.card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, var(--maverick-glass), transparent);
-    transition: left 0.6s ease;
-}
-
-.card:hover::before {
-    left: 100%;
-}
-
 .card:hover {
-    transform: translateY(-10px) scale(1.02);
+    transform: translateY(-2px);
     box-shadow: var(--maverick-shadow-lg);
     border-color: var(--maverick-primary);
 }
@@ -190,34 +152,20 @@ body {
 
 /* Feature Icons */
 .feature-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 1.5rem;
-    border-radius: 20px;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1rem;
+    border-radius: 12px;
     background: var(--maverick-gradient);
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.feature-icon::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--maverick-glass);
-    border-radius: 20px;
+    transition: all 0.3s ease;
 }
 
 .feature-icon i {
     color: white;
-    font-size: 2rem;
-    position: relative;
-    z-index: 2;
+    font-size: 1.5rem;
 }
 
 /* Buttons */
@@ -225,35 +173,15 @@ body {
     background: var(--maverick-gradient);
     border: none;
     color: white;
-    font-weight: 600;
-    padding: 1rem 2rem;
-    border-radius: 15px;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    text-transform: uppercase;
-    letter-spacing: 1px;
     box-shadow: var(--maverick-shadow);
 }
 
-.btn-maverick::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, white, transparent);
-    opacity: 0.2;
-    transition: left 0.6s ease;
-}
-
-.btn-maverick:hover::before {
-    left: 100%;
-}
-
 .btn-maverick:hover {
-    transform: translateY(-3px);
+    transform: translateY(-1px);
     box-shadow: var(--maverick-shadow-lg);
     color: white;
 }
@@ -261,28 +189,26 @@ body {
 .btn-primary, .btn-lg {
     background: var(--maverick-gradient);
     border: none;
-    border-radius: 15px;
-    font-weight: 600;
-    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
 }
 
 .btn-primary:hover, .btn-lg:hover {
-    transform: translateY(-3px);
+    transform: translateY(-1px);
     box-shadow: var(--maverick-shadow);
     background: var(--maverick-gradient);
     border: none;
 }
 
 .btn-outline-secondary {
-    border: 2px solid var(--maverick-border);
+    border: 1px solid var(--maverick-border);
     color: #cbd5e1;
     background: transparent;
-    border-radius: 15px;
-    font-weight: 600;
-    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
     transition: all 0.3s ease;
 }
 
@@ -290,7 +216,7 @@ body {
     background: var(--maverick-glass);
     border-color: var(--maverick-primary);
     color: white;
-    transform: translateY(-3px);
+    transform: translateY(-1px);
 }
 
 /* Step Numbers */
@@ -300,22 +226,15 @@ body {
 }
 
 .step-number .badge {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 600;
     background: var(--maverick-gradient) !important;
-    position: relative;
-    overflow: hidden;
-    animation: stepGlow 3s ease-in-out infinite;
-}
-
-@keyframes stepGlow {
-    0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
-    50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.6); }
+    transition: all 0.3s ease;
 }
 
 /* Alerts */
@@ -413,36 +332,12 @@ body {
 
 /* Animations */
 .fade-in {
-    animation: fadeIn 0.8s ease forwards;
-}
-
-.slide-up {
-    animation: slideUp 0.8s ease forwards;
-}
-
-.float {
-    animation: float 6s ease-in-out infinite;
+    animation: fadeIn 0.5s ease forwards;
 }
 
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
 }
 
 /* Mobile Responsiveness */
