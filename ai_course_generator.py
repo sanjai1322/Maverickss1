@@ -47,17 +47,22 @@ class CourseGenerator:
                 json={
                     "model": self.model,
                     "messages": [{"role": "user", "content": prompt}],
-                    "response_format": {"type": "json_object"}
-                }
+                    "response_format": {"type": "json_object"},
+                    "max_tokens": 800
+                },
+                timeout=30
             )
             
-            if response.status_code == 200:
-                result = response.json()
-                return json.loads(result['choices'][0]['message']['content'])
-            else:
-                logging.error(f"API Error: {response.status_code}")
-                return self._fallback_skill_analysis(resume_text)
+            response.raise_for_status()
+            result = response.json()
+            return json.loads(result['choices'][0]['message']['content'])
                 
+        except requests.Timeout:
+            logging.error("AI request timed out")
+            return self._fallback_skill_analysis(resume_text)
+        except requests.RequestException as e:
+            logging.error(f"AI request failed: {e}")
+            return self._fallback_skill_analysis(resume_text)
         except Exception as e:
             logging.error(f"Error analyzing resume: {e}")
             return self._fallback_skill_analysis(resume_text)
@@ -130,16 +135,22 @@ class CourseGenerator:
                 json={
                     "model": self.model,
                     "messages": [{"role": "user", "content": prompt}],
-                    "response_format": {"type": "json_object"}
-                }
+                    "response_format": {"type": "json_object"},
+                    "max_tokens": 800
+                },
+                timeout=30
             )
             
-            if response.status_code == 200:
-                result = response.json()
-                return json.loads(result['choices'][0]['message']['content'])
-            else:
-                return self._fallback_course_plan()
+            response.raise_for_status()
+            result = response.json()
+            return json.loads(result['choices'][0]['message']['content'])
                 
+        except requests.Timeout:
+            logging.error("AI request timed out")
+            return self._fallback_course_plan()
+        except requests.RequestException as e:
+            logging.error(f"AI request failed: {e}")
+            return self._fallback_course_plan()
         except Exception as e:
             logging.error(f"Error generating course plan: {e}")
             return self._fallback_course_plan()
@@ -183,16 +194,22 @@ class CourseGenerator:
                 json={
                     "model": self.model,
                     "messages": [{"role": "user", "content": prompt}],
-                    "response_format": {"type": "json_object"}
-                }
+                    "response_format": {"type": "json_object"},
+                    "max_tokens": 800
+                },
+                timeout=30
             )
             
-            if response.status_code == 200:
-                result = response.json()
-                return json.loads(result['choices'][0]['message']['content'])
-            else:
-                return self._fallback_progress_analysis()
+            response.raise_for_status()
+            result = response.json()
+            return json.loads(result['choices'][0]['message']['content'])
                 
+        except requests.Timeout:
+            logging.error("AI request timed out")
+            return self._fallback_progress_analysis()
+        except requests.RequestException as e:
+            logging.error(f"AI request failed: {e}")
+            return self._fallback_progress_analysis()
         except Exception as e:
             logging.error(f"Error tracking progress: {e}")
             return self._fallback_progress_analysis()
