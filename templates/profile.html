@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Create Profile - Skill Assessment Platform{% endblock %}
+{% block title %}Launch Your Journey - Mavericks{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -8,14 +8,14 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title mb-0">
-                    <i class="fas fa-user-plus me-2"></i>
-                    Create Your Profile
+                    <i class="fas fa-rocket me-2"></i>
+                    Launch Your Maverick Journey
                 </h3>
             </div>
             <div class="card-body">
                 <p class="text-muted mb-4">
-                    Upload your resume and let our AI analyze your technical skills. 
-                    The more detailed your resume, the better our analysis will be.
+                    Upload your resume and unleash our revolutionary AI to discover your hidden potential. 
+                    The more comprehensive your resume, the deeper our intelligent analysis will be.
                 </p>
                 
                 <form method="POST" action="{{ url_for('profile') }}" enctype="multipart/form-data">
@@ -54,9 +54,9 @@
                             <i class="fas fa-arrow-left me-1"></i>
                             Back to Home
                         </a>
-                        <button type="submit" class="btn btn-primary" id="submit-btn">
-                            <i class="fas fa-upload me-1"></i>
-                            Upload & Analyze Resume
+                        <button type="submit" class="btn btn-maverick" id="submit-btn">
+                            <i class="fas fa-rocket me-1"></i>
+                            Launch Analysis
                         </button>
                     </div>
                 </form>
