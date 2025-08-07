@@ -5,6 +5,10 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.utils import secure_filename
+import PyPDF2
+from docx import Document
+from io import BytesIO
 
 # Set up logging to see what's happening
 logging.basicConfig(level=logging.DEBUG)
@@ -37,6 +41,63 @@ with app.app_context():
     import models  # noqa: F401
     db.create_all()
     logger.info("Database tables created successfully")
+
+# File processing utilities
+def extract_text_from_file(file):
+    """Extract text content from uploaded resume files.
+    
+    Supports PDF, Word documents, and plain text files.
+    
+    Args:
+        file: Uploaded file object from Flask request
+        
+    Returns:
+        str: Extracted text content from the file
+    """
+    filename = secure_filename(file.filename)
+    file_ext = filename.lower().split('.')[-1] if '.' in filename else ''
+    
+    try:
+        if file_ext == 'pdf':
+            # Extract text from PDF
+            pdf_reader = PyPDF2.PdfReader(BytesIO(file.read()))
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text() + "\n"
+            logger.info(f"Extracted text from PDF: {len(text)} characters")
+            return text.strip()
+            
+        elif file_ext in ['doc', 'docx']:
+            # Extract text from Word document
+            doc = Document(BytesIO(file.read()))
+            text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+            logger.info(f"Extracted text from Word document: {len(text)} characters")
+            return text.strip()
+            
+        elif file_ext == 'txt':
+            # Read plain text file
+            text = file.read().decode('utf-8')
+            logger.info(f"Read text file: {len(text)} characters")
+            return text.strip()
+            
+        else:
+            # Try to read as text for other file types
+            try:
+                text = file.read().decode('utf-8')
+                logger.info(f"Read file as text: {len(text)} characters")
+                return text.strip()
+            except:
+                logger.error(f"Unsupported file format: {file_ext}")
+                return None
+                
+    except Exception as e:
+        logger.error(f"Error extracting text from file: {str(e)}")
+        return None
+
+def allowed_file(filename):
+    """Check if uploaded file has an allowed extension."""
+    ALLOWED_EXTENSIONS = {'txt', 'pdf', 'doc', 'docx'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Utility functions for skill extraction and assessment scoring
 
@@ -116,20 +177,45 @@ def calculate_assessment_score(quiz_responses):
 def index():
     return render_template('index.html')
 
-# Profile Agent: Create user profile and extract skills
+# Profile Agent: Create user profile and extract skills from uploaded resume
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
-    """Handle user profile creation and skill extraction from resume."""
+    """Handle user profile creation and skill extraction from uploaded resume file."""
     if request.method == 'POST':
         username = request.form.get('username')
-        resume_text = request.form.get('resume')
         
-        if not username or not resume_text:
-            flash('Please provide both username and resume text.', 'error')
+        if not username:
+            flash('Please provide a username.', 'error')
+            return render_template('profile.html')
+        
+        # Check if file was uploaded
+        if 'resume_file' not in request.files:
+            flash('Please upload a resume file.', 'error')
+            return render_template('profile.html')
+        
+        file = request.files['resume_file']
+        
+        if file.filename == '':
+            flash('No file selected. Please choose a resume file to upload.', 'error')
+            return render_template('profile.html')
+        
+        if not allowed_file(file.filename):
+            flash('Invalid file type. Please upload a PDF, Word document, or text file.', 'error')
             return render_template('profile.html')
         
         try:
             from models import User  # Import here to avoid circular import
+            
+            # Extract text from uploaded file
+            resume_text = extract_text_from_file(file)
+            
+            if not resume_text:
+                flash('Could not extract text from the uploaded file. Please try a different file.', 'error')
+                return render_template('profile.html')
+            
+            if len(resume_text) < 50:
+                flash('The resume content seems too short. Please upload a complete resume.', 'warning')
+                return render_template('profile.html')
             
             # Use skill extraction to analyze resume
             skills = extract_skills_from_resume(resume_text)
@@ -142,13 +228,13 @@ def profile():
                 existing_user.skills = skills
                 existing_user.resume_text = resume_text
                 flash(f'Profile updated successfully for {username}!', 'success')
-                logger.info(f"Profile updated for {username}")
+                logger.info(f"Profile updated for {username} with uploaded resume ({len(resume_text)} chars)")
             else:
                 # Create new user profile
                 new_user = User(username=username, skills=skills, resume_text=resume_text)
                 db.session.add(new_user)
                 flash(f'Profile created successfully for {username}!', 'success')
-                logger.info(f"Profile created for {username}")
+                logger.info(f"Profile created for {username} with uploaded resume ({len(resume_text)} chars)")
             
             db.session.commit()
             session['username'] = username
@@ -157,7 +243,7 @@ def profile():
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error creating profile: {str(e)}")
-            flash('An error occurred while creating your profile. Please try again.', 'error')
+            flash('An error occurred while processing your resume. Please try again.', 'error')
     
     return render_template('profile.html')
 
