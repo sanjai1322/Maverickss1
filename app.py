@@ -24,7 +24,7 @@ db = SQLAlchemy(model_class=Base)
 
 # Create a Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET")
+app.secret_key = os.environ.get("SESSION_SECRET", "mavericks-dev-secret-key-2025")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 
 # Configure the PostgreSQL database
