@@ -71,7 +71,7 @@ body {
 /* Navigation Links */
 .navbar-nav .nav-link {
     font-weight: 500;
-    color: #cbd5e1 !important;
+    color: #e2e8f0 !important;
     transition: all 0.3s ease;
     position: relative;
     margin: 0 0.5rem;
@@ -118,7 +118,7 @@ body {
 
 .hero-subtitle {
     font-size: 1.1rem;
-    color: #cbd5e1;
+    color: #e2e8f0;
     line-height: 1.6;
     margin-bottom: 2.5rem;
     font-weight: 400;
@@ -204,7 +204,7 @@ body {
 
 .btn-outline-secondary {
     border: 1px solid var(--maverick-border);
-    color: #cbd5e1;
+    color: #e2e8f0;
     background: transparent;
     border-radius: 8px;
     font-weight: 500;
@@ -302,7 +302,7 @@ body {
 }
 
 .footer-text {
-    color: var(--maverick-gray);
+    color: #cbd5e1;
     margin: 0;
 }
 
@@ -336,9 +336,26 @@ body {
 }
 
 .form-label {
-    color: #cbd5e1;
+    color: #f1f5f9;
     font-weight: 500;
     margin-bottom: 0.75rem;
+}
+
+.card-text {
+    color: #e2e8f0;
+    line-height: 1.6;
+}
+
+.step-text {
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.card-title {
+    color: white;
+    font-weight: 600;
+    margin-bottom: 1rem;
 }
 
 /* Progress Bars */
@@ -445,7 +462,7 @@ body {
 .btn-close-tour {
     background: none;
     border: none;
-    color: #cbd5e1;
+    color: #e2e8f0;
     font-size: 1rem;
     cursor: pointer;
     padding: 0.25rem;
@@ -460,7 +477,7 @@ body {
 
 .tooltip-content {
     padding: 1rem;
-    color: #cbd5e1;
+    color: #e2e8f0;
     line-height: 1.5;
 }
 
