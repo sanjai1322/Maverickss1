@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-# Set up logging
+# Set up logging to see what's happening
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -16,50 +16,88 @@ class Base(DeclarativeBase):
 
 
 db = SQLAlchemy(model_class=Base)
-# create the app
+
+# Create a Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET")
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1) # needed for url_for to generate with https
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 
-# configure the database, relative to the app instance folder
+# Configure the PostgreSQL database
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
-# initialize the app with the extension, flask-sqlalchemy >= 3.0.x
+
+# Initialize the app with SQLAlchemy
 db.init_app(app)
 
 with app.app_context():
-    # Make sure to import the models here or their tables won't be created
+    # Import models to ensure tables are created
     import models  # noqa: F401
-
     db.create_all()
+    logger.info("Database tables created successfully")
 
-# Utility functions for skill extraction and scoring
+# Utility functions for skill extraction and assessment scoring
+
 def extract_skills_from_resume(resume_text):
-    """Extract skills from resume using keyword matching"""
-    common_skills = ['python', 'java', 'javascript', 'react', 'flask', 'django', 'sql', 'html', 'css', 'git', 
-                    'node.js', 'angular', 'vue', 'postgresql', 'mysql', 'mongodb', 'docker', 'kubernetes', 
-                    'aws', 'azure', 'machine learning', 'data science', 'api', 'rest', 'microservices']
+    """Extract key technical skills from resume using keyword matching.
+    
+    This function scans the resume text for common technical skills and returns
+    a comma-separated string of found skills.
+    
+    Args:
+        resume_text (str): The resume content to analyze
+        
+    Returns:
+        str: Comma-separated list of identified skills
+    """
+    # Common technical skills to look for in resumes
+    common_skills = [
+        'python', 'java', 'javascript', 'react', 'flask', 'django', 'sql', 'html', 'css', 'git',
+        'node.js', 'angular', 'vue', 'postgresql', 'mysql', 'mongodb', 'docker', 'kubernetes',
+        'aws', 'azure', 'machine learning', 'data science', 'api', 'rest', 'microservices',
+        'typescript', 'c++', 'c#', 'ruby', 'php', 'golang', 'rust', 'swift'
+    ]
+    
     found_skills = []
     resume_lower = resume_text.lower()
+    
     for skill in common_skills:
         if skill.lower() in resume_lower:
             found_skills.append(skill.title())
-    return ', '.join(found_skills) if found_skills else 'General Programming Skills'
+    
+    result = ', '.join(found_skills) if found_skills else 'General Programming Skills'
+    logger.info(f"Extracted skills: {result}")
+    return result
 
 def calculate_assessment_score(quiz_responses):
-    """Calculate assessment score based on response quality"""
+    """Calculate assessment score based on response quality and technical depth.
+    
+    Scoring algorithm:
+    - Base score: 60 points
+    - Length bonus: Up to 30 points for detailed responses
+    - Keyword bonus: Up to 10 points for technical terminology
+    
+    Args:
+        quiz_responses (dict): Dictionary of question responses
+        
+    Returns:
+        int: Final score out of 100
+    """
     base_score = 60
     total_length = sum(len(response.strip()) for response in quiz_responses.values())
     
-    # Bonus points for detailed responses
+    # Bonus points for detailed responses (more comprehensive answers)
     length_bonus = min(30, total_length // 50)
     
-    # Bonus for technical keywords
-    technical_keywords = ['algorithm', 'database', 'framework', 'api', 'testing', 'debugging', 'optimization',
-                         'architecture', 'scalability', 'performance', 'security', 'agile', 'git']
+    # Bonus for technical keywords (demonstrates technical knowledge)
+    technical_keywords = [
+        'algorithm', 'database', 'framework', 'api', 'testing', 'debugging', 'optimization',
+        'architecture', 'scalability', 'performance', 'security', 'agile', 'git', 'deployment',
+        'containerization', 'microservices', 'devops', 'ci/cd', 'monitoring'
+    ]
+    
     keyword_count = 0
     for response in quiz_responses.values():
         response_lower = response.lower()
@@ -68,15 +106,20 @@ def calculate_assessment_score(quiz_responses):
     keyword_bonus = min(10, keyword_count * 2)
     
     final_score = base_score + length_bonus + keyword_bonus
-    return min(100, final_score)  # Cap at 100
+    final_score = min(100, final_score)  # Cap at 100
+    
+    logger.info(f"Assessment scoring: base={base_score}, length_bonus={length_bonus}, keyword_bonus={keyword_bonus}, final={final_score}")
+    return final_score
 
 # Routes
 @app.route('/')
 def index():
     return render_template('index.html')
 
+# Profile Agent: Create user profile and extract skills
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
+    """Handle user profile creation and skill extraction from resume."""
     if request.method == 'POST':
         username = request.form.get('username')
         resume_text = request.form.get('resume')
@@ -88,26 +131,27 @@ def profile():
         try:
             from models import User  # Import here to avoid circular import
             
-            # Extract skills using keyword matching
+            # Use skill extraction to analyze resume
             skills = extract_skills_from_resume(resume_text)
             
             # Check if user already exists
             existing_user = User.query.filter_by(username=username).first()
             
             if existing_user:
-                # Update existing user
+                # Update existing user profile
                 existing_user.skills = skills
                 existing_user.resume_text = resume_text
                 flash(f'Profile updated successfully for {username}!', 'success')
+                logger.info(f"Profile updated for {username}")
             else:
-                # Create new user
+                # Create new user profile
                 new_user = User(username=username, skills=skills, resume_text=resume_text)
                 db.session.add(new_user)
                 flash(f'Profile created successfully for {username}!', 'success')
+                logger.info(f"Profile created for {username}")
             
             db.session.commit()
             session['username'] = username
-            logger.info(f"Profile processed for {username}")
             return redirect(url_for('assessment'))
             
         except Exception as e:
@@ -117,14 +161,17 @@ def profile():
     
     return render_template('profile.html')
 
+# Assessment Agent: Process quiz and assign score
 @app.route('/assessment', methods=['GET', 'POST'])
 def assessment():
+    """Handle technical skill assessment and scoring."""
     username = session.get('username')
     if not username:
         flash('Please create a profile first.', 'warning')
         return redirect(url_for('profile'))
     
     if request.method == 'POST':
+        # Collect all quiz responses
         quiz_responses = {
             'question1': request.form.get('question1', ''),
             'question2': request.form.get('question2', ''),
@@ -133,13 +180,13 @@ def assessment():
             'question5': request.form.get('question5', '')
         }
         
-        # Calculate score
+        # Calculate score based on response quality
         score = calculate_assessment_score(quiz_responses)
         
         try:
             from models import User  # Import here to avoid circular import
             
-            # Save score to database
+            # Save assessment results to database
             user = User.query.filter_by(username=username).first()
             if user:
                 user.scores = json.dumps({'total_score': score, 'responses': quiz_responses})
@@ -159,9 +206,11 @@ def assessment():
     
     return render_template('assessment.html', username=username)
 
+# Get user progress and display results
 @app.route('/progress')
 @app.route('/progress/<username>')
 def progress(username=None):
+    """Display user progress, skills, and assessment results."""
     if not username:
         username = session.get('username')
     
@@ -176,23 +225,26 @@ def progress(username=None):
         
         if not user_data:
             flash('User not found.', 'error')
+            logger.warning(f"Progress requested for non-existent user: {username}")
             return redirect(url_for('profile'))
         
-        # Parse scores if available
+        # Parse assessment scores if available
         score_data = None
         if user_data.scores:
             try:
                 score_data = json.loads(user_data.scores)
+                logger.info(f"Progress displayed for {username} with score: {score_data.get('total_score', 'N/A')}")
             except json.JSONDecodeError:
-                # Handle old format (simple score string)
+                # Handle legacy format (simple score string)
                 score_data = {'total_score': int(user_data.scores), 'responses': {}}
+                logger.warning(f"Legacy score format detected for {username}")
         
         return render_template('progress.html', 
                              user_data=user_data, 
                              score_data=score_data)
         
     except Exception as e:
-        logger.error(f"Error fetching progress: {str(e)}")
+        logger.error(f"Error fetching progress for {username}: {str(e)}")
         flash('An error occurred while fetching your progress.', 'error')
         return redirect(url_for('index'))
 
