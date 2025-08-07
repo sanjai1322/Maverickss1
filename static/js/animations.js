@@ -16,15 +16,18 @@ function initializeAnimations() {
         ease: 'power2.out'
     });
 
-    // Stagger animation for cards
-    gsap.from('.card', {
-        opacity: 0,
-        y: 30,
-        duration: 0.6,
-        ease: 'power2.out',
-        stagger: 0.1,
-        delay: 0.2
-    });
+    // Stagger animation for cards if they exist
+    const cards = document.querySelectorAll('.card');
+    if (cards.length > 0) {
+        gsap.from(cards, {
+            opacity: 0,
+            y: 30,
+            duration: 0.6,
+            ease: 'power2.out',
+            stagger: 0.1,
+            delay: 0.2
+        });
+    }
 
     // Add interactive animations
     addInteractiveAnimations();
