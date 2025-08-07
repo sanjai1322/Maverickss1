@@ -1,0 +1,189 @@
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from transformers import pipeline, AutoTokenizer, AutoModel
+import sqlite3
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+import numpy as np
+import logging
+from datetime import datetime
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI()
+
+# CORS setup for frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# SQLite database setup
+conn = sqlite3.connect("mavericks.db")
+cursor = conn.cursor()
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        resume TEXT,
+        skills TEXT,
+        scores TEXT,
+        profile_created_at TEXT,
+        assessment_completed_at TEXT,
+        skills_evaluated_at TEXT,
+        learning_path_generated_at TEXT
+    )
+""")
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS learning_paths (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        module_name TEXT,
+        estimated_time INTEGER,
+        completion_status TEXT
+    )
+""")
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS hackathons (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        challenge_name TEXT,
+        submission TEXT
+    )
+""")
+conn.commit()
+
+# Hugging Face RAG setup
+tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
+model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
+generator = pipeline("text-generation", model="distilgpt2")
+
+# Pydantic models
+class UserProfile(BaseModel):
+    username: str
+    resume: str
+
+class Assessment(BaseModel):
+    username: str
+    quiz_response: str
+
+class LearningPath(BaseModel):
+    username: str
+    module_name: str
+    estimated_time: int
+
+class Hackathon(BaseModel):
+    username: str
+    challenge_name: str
+    submission: str
+
+# Generate embeddings
+def generate_embedding(text):
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+    outputs = model(**inputs)
+    return outputs.last_hidden_state.mean(dim=1).detach().numpy()
+
+# Profile Agent: Process resume
+@app.post("/profile")
+async def create_profile(user: UserProfile):
+    try:
+        embedding = generate_embedding(user.resume)
+        skills = generator("Extract key skills from this resume: " + user.resume, max_length=50)[0]["generated_text"]
+        timestamp = datetime.now().isoformat()
+        cursor.execute(
+            "INSERT INTO users (username, resume, skills, profile_created_at, skills_evaluated_at) VALUES (?, ?, ?, ?, ?)",
+            (user.username, user.resume, skills, timestamp, timestamp)
+        )
+        # Simulate learning path generation
+        cursor.execute(
+            "INSERT INTO learning_paths (username, module_name, estimated_time, completion_status) VALUES (?, ?, ?, ?)",
+            (user.username, "Python Basics", 120, "Not Started")
+        )
+        cursor.execute(
+            "UPDATE users SET learning_path_generated_at = ? WHERE username = ?",
+            (timestamp, user.username)
+        )
+        conn.commit()
+        logger.info(f"Profile created for {user.username} with resume: {user.resume[:50]}...")
+        return {"username": user.username, "skills": skills, "timestamp": timestamp}
+    except Exception as e:
+        logger.error(f"Error creating profile: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Assessment Agent: Process quiz
+@app.post("/assessment")
+async def assess_user(assessment: Assessment):
+    try:
+        embedding = generate_embedding(assessment.quiz_response)
+        score = np.random.randint(60, 100)  # Placeholder
+        timestamp = datetime.now().isoformat()
+        cursor.execute(
+            "UPDATE users SET scores = ?, assessment_completed_at = ? WHERE username = ?",
+            (str(score), timestamp, assessment.username)
+        )
+        conn.commit()
+        logger.info(f"Assessment completed for {assessment.username}: Score {score}")
+        return {"username": assessment.username, "score": score, "timestamp": timestamp}
+    except Exception as e:
+        logger.error(f"Error in assessment: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Learning Path: Get modules
+@app.get("/learning_path/{username}")
+async def get_learning_path(username: str):
+    cursor.execute("SELECT module_name, estimated_time, completion_status FROM learning_paths WHERE username = ?", (username,))
+    modules = [{"module_name": row[0], "estimated_time": row[1], "completion_status": row[2]} for row in cursor.fetchall()]
+    if modules:
+        return {"username": username, "modules": modules}
+    raise HTTPException(status_code=404, detail="No learning path found")
+
+# Hackathon: Submit challenge
+@app.post("/hackathon")
+async def submit_hackathon(hackathon: Hackathon):
+    try:
+        cursor.execute(
+            "INSERT INTO hackathons (username, challenge_name, submission) VALUES (?, ?, ?)",
+            (hackathon.username, hackathon.challenge_name, hackathon.submission)
+        )
+        conn.commit()
+        logger.info(f"Hackathon submission for {hackathon.username}: {hackathon.challenge_name}")
+        return {"username": hackathon.username, "challenge_name": hackathon.challenge_name}
+    except Exception as e:
+        logger.error(f"Error in hackathon submission: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Leaderboard: Get top users
+@app.get("/leaderboard")
+async def get_leaderboard():
+    cursor.execute("SELECT username, scores FROM users WHERE scores IS NOT NULL ORDER BY scores DESC LIMIT 5")
+    leaderboard = [{"username": row[0], "score": row[1]} for row in cursor.fetchall()]
+    return {"leaderboard": leaderboard}
+
+# Progress: Get user data
+@app.get("/progress/{username}")
+async def get_progress(username: str):
+    cursor.execute(
+        "SELECT resume, skills, scores, profile_created_at, assessment_completed_at, skills_evaluated_at, learning_path_generated_at FROM users WHERE username = ?",
+        (username,)
+    )
+    result = cursor.fetchone()
+    if result:
+        return {
+            "username": username,
+            "resume": result[0],
+            "skills": result[1],
+            "scores": result[2],
+            "profile_created_at": result[3],
+            "assessment_completed_at": result[4],
+            "skills_evaluated_at": result[5],
+            "learning_path_generated_at": result[6]
+        }
+    raise HTTPException(status_code=404, detail="User not found")
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

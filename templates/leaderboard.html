@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - Skill Assessment Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-medal me-2"></i>
+                    Top Performers
+                </h3>
+                <p class="text-muted mb-0 mt-2">
+                    Leading users by assessment scores
+                </p>
+            </div>
+            <div class="card-body">
+                {% if leaderboard %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Rank</th>
+                                    <th scope="col">User</th>
+                                    <th scope="col">Score</th>
+                                    <th scope="col">Skills</th>
+                                    <th scope="col">Assessment Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in leaderboard %}
+                                    <tr class="{% if loop.index <= 3 %}table-{% if loop.index == 1 %}warning{% elif loop.index == 2 %}secondary{% else %}dark{% endif %}{% endif %}">
+                                        <td>
+                                            {% if loop.index == 1 %}
+                                                <i class="fas fa-trophy text-warning"></i>
+                                            {% elif loop.index == 2 %}
+                                                <i class="fas fa-medal text-secondary"></i>
+                                            {% elif loop.index == 3 %}
+                                                <i class="fas fa-award text-warning"></i>
+                                            {% else %}
+                                                <span class="text-muted">#{{ loop.index }}</span>
+                                            {% endif %}
+                                            <strong class="ms-2">{{ loop.index }}</strong>
+                                        </td>
+                                        <td>
+                                            <strong>{{ user.username }}</strong>
+                                            {% if loop.index == 1 %}
+                                                <span class="badge bg-warning text-dark ms-2">Champion</span>
+                                            {% elif loop.index == 2 %}
+                                                <span class="badge bg-secondary ms-2">Runner-up</span>
+                                            {% elif loop.index == 3 %}
+                                                <span class="badge bg-dark ms-2">Third Place</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress me-3" style="width: 80px; height: 20px;">
+                                                    <div class="progress-bar {% if user.score >= 90 %}bg-success{% elif user.score >= 75 %}bg-info{% elif user.score >= 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                         role="progressbar" style="width: {{ user.score }}%"></div>
+                                                </div>
+                                                <strong class="text-{% if user.score >= 90 %}success{% elif user.score >= 75 %}info{% elif user.score >= 60 %}warning{% else %}danger{% endif %}">
+                                                    {{ user.score }}/100
+                                                </strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if user.skills %}
+                                                <div class="skills-preview">
+                                                    {% set skill_list = user.skills.split(',')[:3] %}
+                                                    {% for skill in skill_list %}
+                                                        <span class="badge bg-secondary me-1">{{ skill.strip() }}</span>
+                                                    {% endfor %}
+                                                    {% if user.skills.split(',') | length > 3 %}
+                                                        <span class="text-muted">+{{ user.skills.split(',') | length - 3 }} more</span>
+                                                    {% endif %}
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">No skills listed</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ user.assessment_date.strftime('%Y-%m-%d') if user.assessment_date else 'Unknown' }}
+                                            </small>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Statistics Cards -->
+                    <div class="row mt-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary bg-opacity-10">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                    <h5 class="card-title">{{ leaderboard | length }}</h5>
+                                    <p class="card-text text-muted">Total Participants</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success bg-opacity-10">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-line fa-2x text-success mb-2"></i>
+                                    <h5 class="card-title">{{ (leaderboard | map(attribute='score') | sum / leaderboard | length) | round(1) if leaderboard else 0 }}</h5>
+                                    <p class="card-text text-muted">Average Score</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning bg-opacity-10">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-trophy fa-2x text-warning mb-2"></i>
+                                    <h5 class="card-title">{{ leaderboard[0].score if leaderboard else 0 }}</h5>
+                                    <p class="card-text text-muted">Highest Score</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info bg-opacity-10">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-star fa-2x text-info mb-2"></i>
+                                    <h5 class="card-title">{{ (leaderboard | selectattr('score', 'ge', 90) | list | length) }}</h5>
+                                    <p class="card-text text-muted">Excellent (90+)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-medal fa-3x text-muted mb-3"></i>
+                        <h5>No Leaderboard Data</h5>
+                        <p class="text-muted">Be the first to complete an assessment and appear on the leaderboard!</p>
+                        <a href="{{ url_for('assessment') }}" class="btn btn-primary">
+                            <i class="fas fa-clipboard-check me-1"></i>
+                            Take Assessment
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if leaderboard %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-dark">
+            <div class="card-body text-center">
+                <h5 class="card-title">Want to climb the leaderboard?</h5>
+                <p class="card-text">Improve your skills and retake the assessment to boost your ranking!</p>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="{{ url_for('learning_path') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-graduation-cap me-1"></i>
+                        Explore Learning Paths
+                    </a>
+                    <a href="{{ url_for('assessment') }}" class="btn btn-primary">
+                        <i class="fas fa-redo me-1"></i>
+                        Retake Assessment
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<style>
+.table-hover tbody tr:hover {
+    background-color: var(--bs-gray-700);
+}
+
+.skills-preview .badge {
+    font-size: 0.75rem;
+}
+
+.progress {
+    background-color: var(--bs-gray-600);
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.row .card:hover {
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .table-responsive table {
+        font-size: 0.875rem;
+    }
+    
+    .skills-preview .badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+</style>
+
+<script>
+// Auto-refresh leaderboard every 30 seconds
+let refreshInterval;
+
+function startAutoRefresh() {
+    refreshInterval = setInterval(() => {
+        fetch(window.location.href)
+            .then(response => response.text())
+            .then(html => {
+                // Only refresh if content has changed
+                const parser = new DOMParser();
+                const newDoc = parser.parseFromString(html, 'text/html');
+                const newTable = newDoc.querySelector('.table tbody');
+                const currentTable = document.querySelector('.table tbody');
+                
+                if (newTable && currentTable && newTable.innerHTML !== currentTable.innerHTML) {
+                    // Smooth update animation
+                    currentTable.style.opacity = '0.5';
+                    setTimeout(() => {
+                        currentTable.innerHTML = newTable.innerHTML;
+                        currentTable.style.opacity = '1';
+                    }, 300);
+                }
+            })
+            .catch(error => console.log('Refresh error:', error));
+    }, 30000);
+}
+
+// Start auto-refresh when page loads
+document.addEventListener('DOMContentLoaded', startAutoRefresh);
+
+// Stop auto-refresh when page is hidden
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        clearInterval(refreshInterval);
+    } else {
+        startAutoRefresh();
+    }
+});
+</script>
+{% endblock %}

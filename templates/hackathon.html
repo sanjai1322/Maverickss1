@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Hackathons - {{ username }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-trophy me-2"></i>
+                    Submit Hackathon Challenge
+                </h3>
+                <p class="text-muted mb-0 mt-2">
+                    Showcase your skills through coding challenges
+                </p>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('hackathon') }}">
+                    <div class="mb-3">
+                        <label for="challenge_name" class="form-label">
+                            <i class="fas fa-code me-1"></i>
+                            Challenge Name *
+                        </label>
+                        <select class="form-select" id="challenge_name" name="challenge_name" required>
+                            <option value="">Select a challenge...</option>
+                            <option value="Build a REST API">Build a REST API</option>
+                            <option value="Data Analysis Dashboard">Data Analysis Dashboard</option>
+                            <option value="Web Scraping Tool">Web Scraping Tool</option>
+                            <option value="Machine Learning Model">Machine Learning Model</option>
+                            <option value="Frontend Component Library">Frontend Component Library</option>
+                            <option value="Database Design Challenge">Database Design Challenge</option>
+                            <option value="Algorithm Optimization">Algorithm Optimization</option>
+                            <option value="Mobile App Development">Mobile App Development</option>
+                            <option value="DevOps Pipeline Setup">DevOps Pipeline Setup</option>
+                            <option value="Custom Challenge">Custom Challenge</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="submission" class="form-label">
+                            <i class="fas fa-file-code me-1"></i>
+                            Your Solution *
+                        </label>
+                        <textarea class="form-control" id="submission" name="submission" rows="12" 
+                                  placeholder="Describe your solution approach, technologies used, challenges faced, and include code snippets or links to your implementation..." 
+                                  required data-word-count data-min-words="50"></textarea>
+                        <div class="form-text">
+                            Provide a detailed explanation of your solution. Include code snippets, 
+                            architecture decisions, and any external resources used.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('progress') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Back to Progress
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i>
+                            Submit Challenge
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Challenge Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Explain your approach clearly
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Include relevant code snippets
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Mention technologies used
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Describe challenges overcome
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Provide demo links if available
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Popular Challenges
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item border-0 px-0">
+                        <strong>REST API</strong><br>
+                        <small class="text-muted">Build a complete API with authentication</small>
+                    </div>
+                    <div class="list-group-item border-0 px-0">
+                        <strong>Data Dashboard</strong><br>
+                        <small class="text-muted">Create interactive data visualizations</small>
+                    </div>
+                    <div class="list-group-item border-0 px-0">
+                        <strong>ML Model</strong><br>
+                        <small class="text-muted">Train and deploy a machine learning solution</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if submissions %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Your Previous Submissions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="submissionsAccordion">
+                    {% for submission in submissions %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                <button class="accordion-button {% if loop.index != 1 %}collapsed{% endif %}" 
+                                        type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ loop.index }}">
+                                    <div class="d-flex w-100 justify-content-between align-items-center me-3">
+                                        <strong>{{ submission.challenge_name }}</strong>
+                                        <small class="text-muted">
+                                            {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') if submission.submitted_at else 'Recently' }}
+                                        </small>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ loop.index }}" 
+                                 class="accordion-collapse collapse {% if loop.index == 1 %}show{% endif %}" 
+                                 data-bs-parent="#submissionsAccordion">
+                                <div class="accordion-body">
+                                    <div class="submission-content">
+                                        {{ submission.submission }}
+                                    </div>
+                                    <div class="submission-stats mt-3 pt-3 border-top">
+                                        <small class="text-muted">
+                                            <i class="fas fa-font me-1"></i>
+                                            {{ submission.submission.split()|length }} words
+                                            <i class="fas fa-align-left me-1 ms-3"></i>
+                                            {{ submission.submission|length }} characters
+                                            {% if submission.score %}
+                                                <i class="fas fa-star me-1 ms-3"></i>
+                                                Score: {{ submission.score }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<style>
+.submission-content {
+    background-color: var(--bs-gray-100);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.list-group-item {
+    background-color: transparent;
+}
+
+.submission-stats {
+    border-top: 1px solid var(--bs-border-color);
+}
+</style>
+
+<script>
+// Dynamic challenge name input for custom challenges
+document.getElementById('challenge_name').addEventListener('change', function(e) {
+    if (e.target.value === 'Custom Challenge') {
+        // Replace select with text input for custom challenge names
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-control';
+        input.name = 'challenge_name';
+        input.placeholder = 'Enter your custom challenge name...';
+        input.required = true;
+        
+        e.target.parentNode.replaceChild(input, e.target);
+        input.focus();
+    }
+});
+</script>
+{% endblock %}

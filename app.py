@@ -9,6 +9,7 @@ from werkzeug.utils import secure_filename
 import PyPDF2
 from docx import Document
 from io import BytesIO
+from datetime import datetime
 
 # Set up logging to see what's happening
 logging.basicConfig(level=logging.DEBUG)
@@ -225,18 +226,41 @@ def profile():
             
             if existing_user:
                 # Update existing user profile
+                current_time = datetime.utcnow()
                 existing_user.skills = skills
                 existing_user.resume_text = resume_text
+                existing_user.skills_evaluated_at = current_time
                 flash(f'Profile updated successfully for {username}!', 'success')
                 logger.info(f"Profile updated for {username} with uploaded resume ({len(resume_text)} chars)")
+                
+                # Regenerate learning paths with updated skills
+                generate_learning_paths(username, skills)
+                existing_user.learning_path_generated_at = current_time
             else:
                 # Create new user profile
-                new_user = User(username=username, skills=skills, resume_text=resume_text)
+                current_time = datetime.utcnow()
+                new_user = User(
+                    username=username, 
+                    skills=skills, 
+                    resume_text=resume_text,
+                    profile_created_at=current_time,
+                    skills_evaluated_at=current_time
+                )
                 db.session.add(new_user)
                 flash(f'Profile created successfully for {username}!', 'success')
                 logger.info(f"Profile created for {username} with uploaded resume ({len(resume_text)} chars)")
             
             db.session.commit()
+            
+            # Generate learning paths for new users
+            if not existing_user:
+                generate_learning_paths(username, skills)
+                # Update the learning path timestamp
+                updated_user = User.query.filter_by(username=username).first()
+                if updated_user:
+                    updated_user.learning_path_generated_at = datetime.utcnow()
+                    db.session.commit()
+            
             session['username'] = username
             return redirect(url_for('assessment'))
             
@@ -276,6 +300,7 @@ def assessment():
             user = User.query.filter_by(username=username).first()
             if user:
                 user.scores = json.dumps({'total_score': score, 'responses': quiz_responses})
+                user.assessment_completed_at = datetime.utcnow()
                 db.session.commit()
                 
                 flash(f'Assessment completed! Your score: {score}/100', 'success')
@@ -364,6 +389,311 @@ def not_found(error):
 @app.errorhandler(500)
 def internal_error(error):
     return render_template('base.html', error_message="Internal server error"), 500
+
+# Learning Path functionality
+def generate_learning_paths(username, skills):
+    """Generate personalized learning paths based on extracted skills."""
+    try:
+        from models import LearningPath
+        
+        # Sample learning modules based on common technical skills
+        skill_modules = {
+            'python': ['Python Fundamentals', 'Data Structures in Python', 'Advanced Python'],
+            'javascript': ['JavaScript Basics', 'ES6+ Features', 'Async Programming'],
+            'react': ['React Components', 'State Management', 'React Hooks'],
+            'flask': ['Flask Routing', 'Database Integration', 'API Development'],
+            'django': ['Django Models', 'Django Views', 'Django REST Framework'],
+            'sql': ['SQL Basics', 'Advanced Queries', 'Database Design'],
+            'machine learning': ['ML Fundamentals', 'Data Preprocessing', 'Model Training'],
+            'api': ['API Design', 'RESTful Services', 'API Documentation'],
+            'git': ['Version Control', 'Branching Strategies', 'Collaboration'],
+            'docker': ['Containerization', 'Docker Compose', 'Deployment']
+        }
+        
+        # Clear existing learning paths for user
+        LearningPath.query.filter_by(username=username).delete()
+        
+        skills_list = [skill.strip().lower() for skill in skills.split(',')]
+        
+        for skill in skills_list:
+            modules = skill_modules.get(skill, [f'{skill.title()} Fundamentals'])
+            for i, module in enumerate(modules):
+                learning_path = LearningPath(
+                    username=username,
+                    module_name=module,
+                    estimated_time=60 + (i * 30),  # Increasing difficulty
+                    completion_status='Not Started'
+                )
+                db.session.add(learning_path)
+        
+        db.session.commit()
+        logger.info(f"Generated learning paths for {username} based on skills: {skills}")
+        
+    except Exception as e:
+        logger.error(f"Error generating learning paths: {str(e)}")
+        db.session.rollback()
+
+# Learning Path Routes
+@app.route('/learning_path')
+@app.route('/learning_path/<username>')
+def learning_path(username=None):
+    """Display learning paths for a user."""
+    if not username:
+        username = session.get('username')
+    
+    if not username:
+        flash('Please create a profile first.', 'warning')
+        return redirect(url_for('profile'))
+    
+    try:
+        from models import User, LearningPath
+        
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            flash('User not found.', 'error')
+            return redirect(url_for('profile'))
+        
+        learning_paths = LearningPath.query.filter_by(username=username).all()
+        
+        # If no learning paths exist, generate them
+        if not learning_paths and user.skills:
+            generate_learning_paths(username, user.skills)
+            learning_paths = LearningPath.query.filter_by(username=username).all()
+            user.learning_path_generated_at = datetime.utcnow()
+            db.session.commit()
+        
+        return render_template('learning_path.html', 
+                             user=user, 
+                             learning_paths=learning_paths)
+        
+    except Exception as e:
+        logger.error(f"Error fetching learning path: {str(e)}")
+        flash('An error occurred while fetching learning paths.', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/api/learning_path/<username>')
+def api_learning_path(username):
+    """API endpoint to get learning paths for a user."""
+    try:
+        from models import LearningPath
+        
+        learning_paths = LearningPath.query.filter_by(username=username).all()
+        
+        if not learning_paths:
+            return jsonify({'error': 'No learning path found'}), 404
+        
+        modules = [{
+            'module_name': lp.module_name,
+            'estimated_time': lp.estimated_time,
+            'completion_status': lp.completion_status
+        } for lp in learning_paths]
+        
+        return jsonify({'username': username, 'modules': modules})
+        
+    except Exception as e:
+        logger.error(f"Error in API learning path: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/update_learning_path', methods=['POST'])
+def update_learning_path():
+    """Update completion status of a learning path module."""
+    try:
+        from models import LearningPath
+        
+        module_id = request.form.get('module_id')
+        status = request.form.get('status')
+        
+        if not module_id or not status:
+            flash('Invalid request.', 'error')
+            return redirect(url_for('learning_path'))
+        
+        learning_path = LearningPath.query.get(module_id)
+        if learning_path:
+            learning_path.completion_status = status
+            if status == 'Completed':
+                learning_path.completed_at = datetime.utcnow()
+            db.session.commit()
+            flash(f'Module "{learning_path.module_name}" status updated to {status}!', 'success')
+        else:
+            flash('Module not found.', 'error')
+        
+        return redirect(url_for('learning_path'))
+        
+    except Exception as e:
+        logger.error(f"Error updating learning path: {str(e)}")
+        flash('An error occurred while updating the module.', 'error')
+        return redirect(url_for('learning_path'))
+
+# Hackathon Routes
+@app.route('/hackathon', methods=['GET', 'POST'])
+def hackathon():
+    """Handle hackathon challenge submissions."""
+    username = session.get('username')
+    if not username:
+        flash('Please create a profile first.', 'warning')
+        return redirect(url_for('profile'))
+    
+    if request.method == 'POST':
+        try:
+            from models import Hackathon
+            
+            challenge_name = request.form.get('challenge_name')
+            submission = request.form.get('submission')
+            
+            if not challenge_name or not submission:
+                flash('Please provide both challenge name and submission.', 'error')
+                return render_template('hackathon.html', username=username)
+            
+            hackathon_submission = Hackathon(
+                username=username,
+                challenge_name=challenge_name,
+                submission=submission
+            )
+            db.session.add(hackathon_submission)
+            db.session.commit()
+            
+            flash(f'Hackathon submission for "{challenge_name}" submitted successfully!', 'success')
+            logger.info(f"Hackathon submission for {username}: {challenge_name}")
+            
+            return redirect(url_for('hackathon'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error in hackathon submission: {str(e)}")
+            flash('An error occurred while submitting your hackathon entry.', 'error')
+    
+    try:
+        from models import Hackathon
+        
+        # Get user's previous submissions
+        submissions = Hackathon.query.filter_by(username=username).order_by(Hackathon.submitted_at.desc()).all()
+        
+        return render_template('hackathon.html', 
+                             username=username, 
+                             submissions=submissions)
+        
+    except Exception as e:
+        logger.error(f"Error fetching hackathon submissions: {str(e)}")
+        flash('An error occurred while loading hackathon data.', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/api/hackathon', methods=['POST'])
+def api_hackathon():
+    """API endpoint for hackathon submissions."""
+    try:
+        from models import Hackathon
+        
+        data = request.get_json()
+        username = data.get('username')
+        challenge_name = data.get('challenge_name')
+        submission = data.get('submission')
+        
+        if not all([username, challenge_name, submission]):
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        hackathon_submission = Hackathon(
+            username=username,
+            challenge_name=challenge_name,
+            submission=submission
+        )
+        db.session.add(hackathon_submission)
+        db.session.commit()
+        
+        logger.info(f"API Hackathon submission for {username}: {challenge_name}")
+        return jsonify({
+            'username': username,
+            'challenge_name': challenge_name,
+            'message': 'Submission successful'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error in API hackathon submission: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# Leaderboard Routes
+@app.route('/leaderboard')
+def leaderboard():
+    """Display top users by assessment scores."""
+    try:
+        from models import User
+        
+        # Get top users with scores, excluding null scores
+        top_users = User.query.filter(User.scores.isnot(None)).all()
+        
+        # Parse scores and sort
+        leaderboard_data = []
+        for user in top_users:
+            try:
+                score_data = json.loads(user.scores)
+                total_score = score_data.get('total_score', 0)
+                leaderboard_data.append({
+                    'username': user.username,
+                    'score': total_score,
+                    'skills': user.skills,
+                    'assessment_date': user.assessment_completed_at
+                })
+            except (json.JSONDecodeError, AttributeError):
+                # Handle legacy score format
+                try:
+                    score = int(user.scores)
+                    leaderboard_data.append({
+                        'username': user.username,
+                        'score': score,
+                        'skills': user.skills,
+                        'assessment_date': user.assessment_completed_at
+                    })
+                except (ValueError, TypeError):
+                    continue
+        
+        # Sort by score descending and take top 10
+        leaderboard_data.sort(key=lambda x: x['score'], reverse=True)
+        top_10 = leaderboard_data[:10]
+        
+        return render_template('leaderboard.html', leaderboard=top_10)
+        
+    except Exception as e:
+        logger.error(f"Error fetching leaderboard: {str(e)}")
+        flash('An error occurred while loading the leaderboard.', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/api/leaderboard')
+def api_leaderboard():
+    """API endpoint to get top users leaderboard."""
+    try:
+        from models import User
+        
+        # Get top users with scores
+        top_users = User.query.filter(User.scores.isnot(None)).all()
+        
+        leaderboard_data = []
+        for user in top_users:
+            try:
+                score_data = json.loads(user.scores)
+                total_score = score_data.get('total_score', 0)
+                leaderboard_data.append({
+                    'username': user.username,
+                    'score': total_score
+                })
+            except (json.JSONDecodeError, AttributeError):
+                try:
+                    score = int(user.scores)
+                    leaderboard_data.append({
+                        'username': user.username,
+                        'score': score
+                    })
+                except (ValueError, TypeError):
+                    continue
+        
+        # Sort by score and take top 5
+        leaderboard_data.sort(key=lambda x: x['score'], reverse=True)
+        top_5 = leaderboard_data[:5]
+        
+        return jsonify({'leaderboard': top_5})
+        
+    except Exception as e:
+        logger.error(f"Error in API leaderboard: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
