@@ -1,4 +1,5 @@
 import os
+import json
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -15,6 +16,17 @@ db = SQLAlchemy(model_class=Base)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "mavericks-dev-secret-key-2025-fallback")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1) # needed for url_for to generate with https
+
+# Custom Jinja2 filter for JSON parsing
+@app.template_filter('from_json')
+def from_json_filter(value):
+    """Parse JSON string in Jinja2 templates."""
+    try:
+        if isinstance(value, str):
+            return json.loads(value)
+        return value
+    except (json.JSONDecodeError, TypeError):
+        return {}
 
 # configure the database, relative to the app instance folder
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")

@@ -102,10 +102,15 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            {% if hasattr(user, 'parsed_score') and user.parsed_score %}
-                                                <span class="badge {% if user.parsed_score >= 80 %}bg-success{% elif user.parsed_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
-                                                    {{ user.parsed_score }}/100
-                                                </span>
+                                            {% if user.scores %}
+                                                {% set scores_data = user.scores | from_json %}
+                                                {% if scores_data and scores_data.assessment_score %}
+                                                    <span class="badge {% if scores_data.assessment_score >= 80 %}bg-success{% elif scores_data.assessment_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                        {{ scores_data.assessment_score }}/100
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted">Pending review</span>
+                                                {% endif %}
                                             {% else %}
                                                 <span class="text-muted">Not assessed</span>
                                             {% endif %}

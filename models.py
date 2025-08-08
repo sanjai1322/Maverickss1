@@ -15,6 +15,7 @@ class User(db.Model):
     assessment_completed_at = db.Column(DateTime)
     skills_evaluated_at = db.Column(DateTime)
     learning_path_generated_at = db.Column(DateTime)
+    last_login_at = db.Column(DateTime)
     
     # Relationships
     learning_paths = db.relationship('LearningPath', backref='user', lazy=True, cascade='all, delete-orphan')
