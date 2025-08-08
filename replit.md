@@ -72,8 +72,9 @@ Branding: "Mavericks" with rocket theme and blue gradient color scheme.
 - **Vanilla JavaScript**: Client-side interactivity without additional frameworks
 
 ## Database
-- **SQLite**: Embedded database for user data and assessment results
-- **Built-in Python sqlite3**: Database connectivity and operations
+- **PostgreSQL**: Production-grade database with comprehensive user management and course tracking
+- **SQLAlchemy ORM**: Database connectivity with connection pooling and pre-ping for reliability
+- **Environment Variables**: Secure database connection using DATABASE_URL
 
 ## Development Tools
 - **Python Logging**: Application monitoring and debugging
