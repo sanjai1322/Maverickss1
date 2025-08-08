@@ -231,7 +231,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="exerciseLanguage" class="form-label">Programming Language</label>
-                            <select class="form-select" id="exerciseLanguage" name="exerciseLanguage" required>
+                            <select class="form-select" id="exerciseLanguage" name="skill" required>
                                 <option value="">Select Language</option>
                                 <option value="python">Python</option>
                                 <option value="javascript">JavaScript</option>
@@ -244,7 +244,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="exerciseDifficulty" class="form-label">Difficulty Level</label>
-                            <select class="form-select" id="exerciseDifficulty" name="exerciseDifficulty" required>
+                            <select class="form-select" id="exerciseDifficulty" name="difficulty" required>
                                 <option value="">Select Difficulty</option>
                                 <option value="beginner">Beginner</option>
                                 <option value="intermediate">Intermediate</option>
@@ -316,14 +316,112 @@
 </style>
 
 <script>
-// Form submission is now handled by the server
+// Enhanced form submission with AJAX for better user experience
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('generateExerciseForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Display the generated exercise
+                    showGeneratedExercise(data.exercise);
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('generateExerciseModal'));
+                    modal.hide();
+                    // Reset form
+                    form.reset();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to generate exercise'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error generating exercise. Please try again.');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    }
+});
+
+function showGeneratedExercise(exercise) {
+    // Create a new exercise card and add it to the exercises section
+    const exercisesContainer = document.querySelector('.row .card-body .row');
+    if (exercisesContainer) {
+        const newExerciseCard = `
+            <div class="col-lg-6 mb-4">
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">${exercise.title}</h6>
+                            <span class="badge bg-light text-dark">${exercise.difficulty}</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">${exercise.description}</p>
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="fas fa-code me-1"></i>${exercise.skill}
+                                <i class="fas fa-clock me-1 ms-3"></i>${exercise.estimated_time}
+                                <i class="fas fa-star me-1 ms-3"></i>${exercise.points} points
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Starter Code:</strong>
+                            <pre class="bg-dark text-light p-2 rounded mt-1" style="font-size: 0.85em;">${exercise.starter_code}</pre>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-success" onclick="startExercise('new')">
+                                <i class="fas fa-play"></i> Start Now
+                            </button>
+                            <button class="btn btn-sm btn-outline-info" onclick="showExerciseDetails(${JSON.stringify(exercise).replace(/"/g, '&quot;')})">
+                                <i class="fas fa-eye"></i> View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Insert before the "Add New Exercise" card
+        const addNewCard = exercisesContainer.querySelector('.col-lg-6:last-child');
+        if (addNewCard) {
+            addNewCard.insertAdjacentHTML('beforebegin', newExerciseCard);
+        }
+    }
+}
+
+function showExerciseDetails(exercise) {
+    alert(`Exercise: ${exercise.title}\n\nDescription: ${exercise.description}\n\nTest Cases:\n${exercise.test_cases.join('\n')}`);
+}
 
 function uploadExercise() {
     alert('Exercise upload functionality will be implemented next.');
 }
 
 function startExercise(exerciseId) {
-    alert('Starting exercise ' + exerciseId + '. This will open the coding environment.');
+    // Open a simple coding interface
+    if (exerciseId === 'new') {
+        alert('Opening coding environment for the newly generated exercise...');
+    } else {
+        alert('Starting exercise ' + exerciseId + '. This will open the coding environment.');
+    }
 }
 
 function previewExercise(exerciseId) {

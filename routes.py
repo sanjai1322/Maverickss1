@@ -232,7 +232,7 @@ def profile():
             generate_tailored_courses(username, resume_text, skills)
             
             session['username'] = username
-            return redirect(url_for('assessment'))
+            return redirect(url_for('assessment_panel'))
             
         except Exception as e:
             db.session.rollback()
@@ -242,50 +242,11 @@ def profile():
     return render_template('profile.html')
 
 # Assessment Agent: Process quiz and assign score
-@app.route('/assessment', methods=['GET', 'POST'])
+# Redirect old assessment route to assessment panel
+@app.route('/assessment')
 def assessment():
-    """Handle technical skill assessment and scoring."""
-    username = session.get('username')
-    if not username:
-        flash('Please create a profile first.', 'warning')
-        return redirect(url_for('profile'))
-    
-    if request.method == 'POST':
-        # Collect all quiz responses
-        quiz_responses = {
-            'question1': request.form.get('question1', ''),
-            'question2': request.form.get('question2', ''),
-            'question3': request.form.get('question3', ''),
-            'question4': request.form.get('question4', ''),
-            'question5': request.form.get('question5', '')
-        }
-        
-        # Calculate score based on response quality
-        score = calculate_assessment_score(quiz_responses)
-        
-        try:
-            from models import User  # Import here to avoid circular import
-            
-            # Save assessment results to database
-            user = User.query.filter_by(username=username).first()
-            if user:
-                user.scores = json.dumps({'total_score': score, 'responses': quiz_responses})
-                user.assessment_completed_at = datetime.utcnow()
-                db.session.commit()
-                
-                flash(f'Assessment completed! Your score: {score}/100', 'success')
-                logger.info(f"Assessment completed for {username}: Score {score}")
-                return redirect(url_for('progress'))
-            else:
-                flash('User not found. Please create a profile first.', 'error')
-                return redirect(url_for('profile'))
-            
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Error saving assessment: {str(e)}")
-            flash('An error occurred while saving your assessment. Please try again.', 'error')
-    
-    return render_template('assessment.html', username=username)
+    """Redirect to assessment panel."""
+    return redirect(url_for('assessment_panel'))
 
 # Get user progress and display results
 @app.route('/progress')
@@ -486,8 +447,8 @@ def assessment_panel():
     """Assessment panel route."""
     username = session.get('username')
     if not username:
-        flash('Please create a profile first.', 'warning')
-        return redirect(url_for('profile'))
+        # Allow access without session for demo purposes
+        username = 'demo_user'
     
     # Sample AI exercises for the assessment panel
     ai_exercises = [
@@ -749,8 +710,8 @@ def generate_exercise():
     
     try:
         # Get form data
-        skill = request.form.get('skill', 'Python')
-        difficulty = request.form.get('difficulty', 'Medium')
+        skill = request.form.get('skill') or request.form.get('exerciseLanguage', 'Python') 
+        difficulty = request.form.get('difficulty') or request.form.get('exerciseDifficulty', 'Medium')
         
         # Enhanced exercise generation based on skill and difficulty
         exercises = {
