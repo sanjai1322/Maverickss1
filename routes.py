@@ -596,7 +596,50 @@ def gen_ai_info():
 @app.route('/api_status')
 def api_status():
     """Display API status page."""
-    return render_template('api_status.html')
+    try:
+        from config.api_config import API_SERVICES
+        # Add API stats for template
+        api_stats = {
+            'total_requests': 0,
+            'successful_requests': 0,
+            'failed_requests': 0,
+            'avg_response_time': 0,
+            'uptime': '100%',
+            'last_updated': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        return render_template('api_status.html', api_services=API_SERVICES, api_stats=api_stats)
+    except ImportError:
+        # Fallback API services data
+        api_services = {
+            "OpenRouter": {
+                "description": "Primary LLM service for resume analysis and course generation",
+                "model": "openai/gpt-oss-20b:free",
+                "status": "needs_key",
+                "features": ["Resume Analysis", "Course Generation", "Assessment Creation"]
+            },
+            "Hugging Face": {
+                "description": "NLP models for text processing and embeddings",
+                "model": "Multiple models (DistilGPT2, BERT, Sentence Transformers)",
+                "status": "needs_key", 
+                "features": ["Skill Extraction", "Text Classification", "Embeddings"]
+            },
+            "Local Models": {
+                "description": "Fallback local processing",
+                "model": "Rule-based + Local NLP",
+                "status": "always_available",
+                "features": ["Basic Skill Extraction", "Template-based Courses"]
+            }
+        }
+        # Add API stats for template
+        api_stats = {
+            'total_requests': 0,
+            'successful_requests': 0,
+            'failed_requests': 0,
+            'avg_response_time': 0,
+            'uptime': '100%',
+            'last_updated': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        return render_template('api_status.html', api_services=api_services, api_stats=api_stats)
 
 # Admin routes for template compatibility
 @app.route('/admin_dashboard')
