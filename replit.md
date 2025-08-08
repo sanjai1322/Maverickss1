@@ -65,11 +65,18 @@ Branding: "Mavericks" with rocket theme and blue gradient color scheme.
 
 # External Dependencies
 
+## API Configuration System
+- **Centralized Config**: `config/api_keys.py` stores all API keys instead of environment variables
+- **Service Management**: `config/api_config.py` handles service availability, headers, and fallbacks
+- **Status Monitoring**: Real-time API service monitoring and testing console
+- **Documentation**: Complete setup guide in `config/README.md`
+
 ## AI/ML Services
+- **OpenRouter GPT**: Primary LLM service using `openai/gpt-oss-20b:free` model
 - **Hugging Face Transformers**: Core NLP library for text processing and skill extraction
 - **Sentence Transformers**: Specifically "all-MiniLM-L6-v2" model for text embeddings
 - **DistilGPT2**: Text generation model for assessment processing
-- **NumPy**: Numerical computing support for AI model operations
+- **OpenAI GPT-3.5**: Backup LLM service for additional AI capabilities
 
 ## Web Framework Dependencies
 - **Flask**: Primary web framework with Jinja2 templating

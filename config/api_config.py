@@ -1,48 +1,59 @@
 """
 API Configuration for Mavericks Platform
 Contains all API endpoints, keys, and service configurations
+Uses config/api_keys.py for actual API key storage
 """
 
-import os
 from dataclasses import dataclass
 from typing import Dict, Optional
+
+# Import API keys from local file instead of environment variables
+try:
+    from config.api_keys import *
+except ImportError:
+    # Fallback to environment variables if api_keys.py doesn't exist
+    import os
+    OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+    HUGGINGFACE_API_KEY = os.environ.get("HUGGINGFACE_API_KEY", "")
+    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+    CODEX_API_KEY = os.environ.get("CODEX_API_KEY", "")
+    SESSION_SECRET = os.environ.get("SESSION_SECRET", "mavericks-dev-secret-key-2025")
+    DATABASE_URL = os.environ.get("DATABASE_URL", "")
+    
+    # Default configurations
+    OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+    OPENROUTER_MODEL = "openai/gpt-oss-20b:free"
+    HUGGINGFACE_BASE_URL = "https://api-inference.huggingface.co"
+    OPENAI_BASE_URL = "https://api.openai.com/v1" 
+    OPENAI_MODEL = "gpt-3.5-turbo"
+    API_RATE_LIMIT = 60
+    API_TIMEOUT = 30
 
 @dataclass
 class APIConfig:
     """Configuration class for all API services used in Mavericks"""
     
-    # OpenRouter API (Primary LLM Service)
-    OPENROUTER_API_KEY: str = os.environ.get("OPENROUTER_API_KEY", "")
-    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
-    OPENROUTER_MODEL: str = "openai/gpt-oss-20b:free"
+    # API Keys from api_keys.py file
+    OPENROUTER_API_KEY: str = OPENROUTER_API_KEY
+    OPENROUTER_BASE_URL: str = OPENROUTER_BASE_URL
+    OPENROUTER_MODEL: str = OPENROUTER_MODEL
     
-    # Hugging Face API (NLP Models)
-    HUGGINGFACE_API_KEY: str = os.environ.get("HUGGINGFACE_API_KEY", "")
-    HUGGINGFACE_BASE_URL: str = "https://api-inference.huggingface.co"
+    HUGGINGFACE_API_KEY: str = HUGGINGFACE_API_KEY
+    HUGGINGFACE_BASE_URL: str = HUGGINGFACE_BASE_URL
     
-    # CodeT5 Model Configuration
-    CODET5_MODEL: str = "Salesforce/codet5-base"
-    DISTILGPT2_MODEL: str = "distilgpt2"
-    SENTENCE_TRANSFORMER_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
-    BERT_MODEL: str = "bert-base-uncased"
+    OPENAI_API_KEY: str = OPENAI_API_KEY
+    OPENAI_BASE_URL: str = OPENAI_BASE_URL
+    OPENAI_MODEL: str = OPENAI_MODEL
     
-    # OpenAI API (Backup/Alternative)
-    OPENAI_API_KEY: str = os.environ.get("OPENAI_API_KEY", "")
-    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
-    OPENAI_MODEL: str = "gpt-3.5-turbo"
+    CODEX_API_KEY: str = CODEX_API_KEY
     
-    # Assessment Generation APIs
-    CODEX_API_KEY: str = os.environ.get("CODEX_API_KEY", "")
-    
-    # Database Configuration
-    DATABASE_URL: str = os.environ.get("DATABASE_URL", "")
-    
-    # Session Configuration
-    SESSION_SECRET: str = os.environ.get("SESSION_SECRET", "mavericks-dev-secret-key-2025")
+    # Configuration from api_keys.py
+    DATABASE_URL: str = DATABASE_URL
+    SESSION_SECRET: str = SESSION_SECRET
     
     # Rate Limiting
-    API_RATE_LIMIT: int = 60  # requests per minute
-    API_TIMEOUT: int = 30  # seconds
+    API_RATE_LIMIT: int = API_RATE_LIMIT  # requests per minute
+    API_TIMEOUT: int = API_TIMEOUT  # seconds
     
     def get_headers(self, service: str) -> Dict[str, str]:
         """Get headers for specific API service"""
@@ -132,13 +143,16 @@ API_SERVICES = {
 
 def get_required_api_keys():
     """Return list of API keys that need to be configured"""
-    required = []
-    
-    if not api_config.OPENROUTER_API_KEY:
-        required.append("OPENROUTER_API_KEY")
-    if not api_config.HUGGINGFACE_API_KEY:
-        required.append("HUGGINGFACE_API_KEY")
-    if not api_config.OPENAI_API_KEY:
-        required.append("OPENAI_API_KEY")
-        
-    return required
+    try:
+        from config.api_keys import get_missing_services
+        return get_missing_services()
+    except ImportError:
+        # Fallback method
+        required = []
+        if not api_config.OPENROUTER_API_KEY:
+            required.append("OPENROUTER_API_KEY")
+        if not api_config.HUGGINGFACE_API_KEY:
+            required.append("HUGGINGFACE_API_KEY")
+        if not api_config.OPENAI_API_KEY:
+            required.append("OPENAI_API_KEY")
+        return required
