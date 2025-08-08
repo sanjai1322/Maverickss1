@@ -1,5 +1,5 @@
 from app import db
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, Text, Integer, String, Boolean
 from datetime import datetime
 
 
@@ -10,16 +10,37 @@ class User(db.Model):
     scores = db.Column(db.Text)  # JSON string of assessment scores and responses
     resume_text = db.Column(db.Text)  # Original resume content
     created_at = db.Column(DateTime, default=datetime.utcnow)
-    # Additional timestamp fields for enhanced tracking
+    
+    # Enhanced agent-based tracking fields
     profile_created_at = db.Column(DateTime, default=datetime.utcnow)
     assessment_completed_at = db.Column(DateTime)
     skills_evaluated_at = db.Column(DateTime)
     learning_path_generated_at = db.Column(DateTime)
     last_login_at = db.Column(DateTime)
     
+    # Agent system integration fields
+    agent_profile_data = db.Column(Text)  # JSON data from ProfileAgent
+    gamification_data = db.Column(Text)   # JSON data from GamificationAgent
+    learning_progress = db.Column(Text)   # JSON data from LearningPathAgent
+    analytics_data = db.Column(Text)      # JSON data from AnalyticsAgent
+    
+    # User preferences and settings
+    preferred_learning_style = db.Column(String(50))
+    time_commitment_hours = db.Column(Integer, default=5)
+    learning_goals = db.Column(Text)  # JSON array of goals
+    notification_preferences = db.Column(Text)  # JSON preferences
+    
+    # Engagement metrics
+    total_points = db.Column(Integer, default=0)
+    current_level = db.Column(Integer, default=1)
+    current_streak = db.Column(Integer, default=0)
+    longest_streak = db.Column(Integer, default=0)
+    
     # Relationships
     learning_paths = db.relationship('LearningPath', backref='user', lazy=True, cascade='all, delete-orphan')
     hackathon_submissions = db.relationship('Hackathon', backref='user', lazy=True, cascade='all, delete-orphan')
+    assessment_attempts = db.relationship('AssessmentAttempt', backref='user', lazy=True, cascade='all, delete-orphan')
+    achievements = db.relationship('UserAchievement', backref='user', lazy=True, cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<User {self.username}>'
@@ -30,11 +51,15 @@ class User(db.Model):
             'username': self.username,
             'skills': self.skills,
             'scores': self.scores,
+            'total_points': self.total_points,
+            'current_level': self.current_level,
+            'current_streak': self.current_streak,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'profile_created_at': self.profile_created_at.isoformat() if self.profile_created_at else None,
             'assessment_completed_at': self.assessment_completed_at.isoformat() if self.assessment_completed_at else None,
             'skills_evaluated_at': self.skills_evaluated_at.isoformat() if self.skills_evaluated_at else None,
-            'learning_path_generated_at': self.learning_path_generated_at.isoformat() if self.learning_path_generated_at else None
+            'learning_path_generated_at': self.learning_path_generated_at.isoformat() if self.learning_path_generated_at else None,
+            'last_login_at': self.last_login_at.isoformat() if self.last_login_at else None
         }
 
 
@@ -72,6 +97,15 @@ class Hackathon(db.Model):
     submitted_at = db.Column(DateTime, default=datetime.utcnow)
     score = db.Column(db.Integer)  # Optional scoring for hackathon submissions
     
+    # Enhanced hackathon fields
+    hackathon_id = db.Column(String(128))  # Reference to agent system hackathon
+    theme = db.Column(String(64))
+    difficulty = db.Column(String(32))
+    rank = db.Column(Integer)
+    final_score = db.Column(Integer)
+    evaluation_data = db.Column(Text)  # JSON evaluation details
+    team_name = db.Column(String(128))
+    
     def __repr__(self):
         return f'<Hackathon {self.username}: {self.challenge_name}>'
     
@@ -82,8 +116,112 @@ class Hackathon(db.Model):
             'challenge_name': self.challenge_name,
             'submission': self.submission,
             'submitted_at': self.submitted_at.isoformat() if self.submitted_at else None,
-            'score': self.score
+            'score': self.score,
+            'final_score': self.final_score,
+            'rank': self.rank,
+            'theme': self.theme,
+            'difficulty': self.difficulty
         }
+
+
+class AssessmentAttempt(db.Model):
+    """Track individual assessment attempts for detailed analytics."""
+    id = db.Column(Integer, primary_key=True)
+    user_id = db.Column(Integer, db.ForeignKey('user.id'), nullable=False)
+    assessment_id = db.Column(String(128), nullable=False)
+    
+    # Assessment details
+    started_at = db.Column(DateTime, default=datetime.utcnow)
+    completed_at = db.Column(DateTime)
+    duration_minutes = db.Column(Integer)
+    
+    # Results
+    total_score = db.Column(Integer)
+    max_possible_score = db.Column(Integer)
+    questions_attempted = db.Column(Integer)
+    questions_correct = db.Column(Integer)
+    
+    # Detailed data
+    question_responses = db.Column(Text)  # JSON array of responses
+    skill_breakdown = db.Column(Text)     # JSON skill-level scores
+    difficulty_level = db.Column(String(32))
+    assessment_type = db.Column(String(64))
+    
+    def __repr__(self):
+        return f'<AssessmentAttempt {self.user_id}: {self.assessment_id}>'
+
+
+class UserAchievement(db.Model):
+    """Track user achievements and badges."""
+    id = db.Column(Integer, primary_key=True)
+    user_id = db.Column(Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    achievement_type = db.Column(String(64), nullable=False)
+    achievement_name = db.Column(String(128), nullable=False)
+    badge_level = db.Column(String(32))  # bronze, silver, gold, platinum
+    description = db.Column(Text)
+    icon = db.Column(String(64))
+    
+    earned_at = db.Column(DateTime, default=datetime.utcnow)
+    points_awarded = db.Column(Integer, default=0)
+    
+    # Achievement criteria met
+    criteria_data = db.Column(Text)  # JSON data about how it was earned
+    
+    def __repr__(self):
+        return f'<UserAchievement {self.user_id}: {self.achievement_name}>'
+
+
+class LearningModule(db.Model):
+    """Individual learning modules within learning paths."""
+    id = db.Column(Integer, primary_key=True)
+    learning_path_id = db.Column(Integer, db.ForeignKey('learning_path.id'), nullable=False)
+    
+    title = db.Column(String(256), nullable=False)
+    description = db.Column(Text)
+    module_order = db.Column(Integer, default=0)
+    
+    # Content details
+    topics = db.Column(Text)  # JSON array of topics
+    estimated_hours = db.Column(Integer)
+    difficulty_level = db.Column(String(32))
+    
+    # Progress tracking
+    completion_status = db.Column(String(32), default='not_started')
+    completion_percentage = db.Column(Integer, default=0)
+    started_at = db.Column(DateTime)
+    completed_at = db.Column(DateTime)
+    
+    # Performance data
+    exercises_completed = db.Column(Integer, default=0)
+    average_score = db.Column(Integer)
+    time_spent_minutes = db.Column(Integer, default=0)
+    
+    def __repr__(self):
+        return f'<LearningModule {self.title}>'
+
+
+class PlatformEvent(db.Model):
+    """Track all platform events for analytics."""
+    id = db.Column(Integer, primary_key=True)
+    
+    # Event identification
+    event_id = db.Column(String(128), unique=True, nullable=False)
+    event_type = db.Column(String(64), nullable=False)
+    source_agent = db.Column(String(64))
+    target_agent = db.Column(String(64))
+    
+    # Event context
+    user_id = db.Column(Integer, db.ForeignKey('user.id'))
+    timestamp = db.Column(DateTime, default=datetime.utcnow)
+    
+    # Event data
+    payload = db.Column(Text)  # JSON event payload
+    processing_status = db.Column(String(32), default='processed')
+    error_message = db.Column(Text)
+    
+    def __repr__(self):
+        return f'<PlatformEvent {self.event_type}>'
 
 
 class TailoredCourse(db.Model):

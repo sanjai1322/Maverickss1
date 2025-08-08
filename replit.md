@@ -1,6 +1,6 @@
 # Overview
 
-The Skill Assessment Platform "Mavericks" is an AI-powered web application that analyzes resumes and conducts technical skill assessments. The system extracts technical skills from resume text using AI and provides interactive assessments to evaluate candidates' technical capabilities. Now featuring AI-powered tailored course recommendations with real-time progress tracking, built with Flask and PostgreSQL for comprehensive skill development and monitoring.
+The Skill Assessment Platform "Mavericks" is a comprehensive agent-based coding platform that automates coding skill assessment, provides personalized learning paths, facilitates engaging hackathons, and offers full visibility into user progress. The platform uses a decomposed agent architecture with a central message bus, gamification features including leaderboards, and AI-powered agents for profile analysis, assessment generation, and learning path recommendations. Built with Flask and PostgreSQL for scalable, enterprise-ready skill development and monitoring.
 
 # User Preferences
 
@@ -18,58 +18,79 @@ Branding: "Mavericks" with rocket theme and blue gradient color scheme.
 - **Onboarding System**: Interactive guided tour with tooltip overlays and step-by-step navigation
 
 ## Backend Architecture
-- **Web Framework**: Flask with CORS enabled for API compatibility
-- **AI Integration**: Hugging Face transformers for NLP tasks including skill extraction and text generation
+- **Web Framework**: Flask with CORS enabled for API compatibility and comprehensive agent API endpoints
+- **Agent System**: Event-driven architecture with 6 specialized agents communicating through central EventBus
+  - **ProfileAgent**: Resume analysis and skill extraction using AI/NLP
+  - **AssessmentAgent**: Automated exercise generation and solution evaluation
+  - **GamificationAgent**: Points, badges, achievements, and leaderboard management
+  - **LearningPathAgent**: Personalized curriculum generation and progress tracking
+  - **HackathonAgent**: Coding competition management with automated scoring
+  - **AnalyticsAgent**: Comprehensive platform analytics and user behavior insights
+- **Event Bus**: Asynchronous message passing with event history and analytics
 - **Session Management**: Flask sessions with configurable secret key for user state
-- **Request Processing**: Form-based data submission with flash messaging for user feedback
+- **Request Processing**: Form-based data submission with flash messaging and agent integration
 
 ## Database Design
-- **Storage**: PostgreSQL database with comprehensive user management and course tracking
-- **User Management Schema**: 
-  - Users: Store username, extracted skills, assessment scores, resume text, and timestamps
+- **Storage**: PostgreSQL database with comprehensive agent-based user management and tracking
+- **Core Schema**: 
+  - **Users**: Enhanced with agent system fields (profile, gamification, learning, analytics data)
+  - **AssessmentAttempt**: Detailed assessment tracking with skill breakdown and performance metrics
+  - **UserAchievement**: Badge and achievement system with criteria tracking
+  - **LearningModule**: Individual learning modules within paths with progress tracking
+  - **Hackathon**: Enhanced hackathon submissions with team management and evaluation data
+  - **PlatformEvent**: Complete event tracking for agent system analytics
+- **Legacy Schema**:
   - TailoredCourse: AI-generated courses with completion tracking
   - CourseModule: Individual learning modules within courses
   - ProgressTracking: Real-time activity and progress monitoring
   - LearningPath: Traditional learning path modules
-  - Hackathon: Challenge submissions and scoring
 - **Admin Management Schema**:
   - AdminUser: Administrator accounts with authentication
   - UserActivity: Detailed user activity logs for analytics
   - UserReport: Generated reports for users and administrators
   - SystemAnalytics: Platform-wide metrics and performance data
-  - Achievement: User badges and achievement tracking system
-- **Data Format**: Skills and course data stored as JSON strings for flexible structure
+- **Data Format**: Agent data stored as JSON strings with structured event payloads
 - **Connection Management**: SQLAlchemy ORM with connection pooling and pre-ping for reliability
 
 ## AI/ML Components
-- **Resume Analysis**: OpenRouter API (openai/gpt-oss-20b:free) for advanced resume parsing and skill extraction
-- **Course Generation**: AI-powered creation of personalized learning paths based on skill gaps
-- **Progress Analytics**: Real-time AI feedback and adaptive recommendations
-- **Assessment Scoring**: Automated evaluation of assessment responses
-- **Fallback Systems**: Local processing when AI services are unavailable
-- **Performance**: Efficient API integration with error handling and fallback mechanisms
+- **Agent-Based AI Integration**: Each agent incorporates AI capabilities for specialized tasks
+  - **ProfileAgent**: OpenRouter API and Hugging Face transformers for resume analysis and skill extraction
+  - **AssessmentAgent**: AI-powered exercise generation with automated solution evaluation
+  - **LearningPathAgent**: Intelligent curriculum creation based on skill gaps and learning patterns
+  - **GamificationAgent**: Smart engagement mechanics with adaptive difficulty and reward systems
+  - **HackathonAgent**: Automated challenge generation and performance evaluation
+  - **AnalyticsAgent**: Predictive insights and trend analysis for user behavior
+- **Event-Driven AI Processing**: Agents respond to events with contextual AI analysis
+- **Fallback Systems**: Local processing when AI services are unavailable with graceful degradation
+- **Performance**: Efficient API integration with error handling and comprehensive logging
 
 ## Application Flow
-- **Onboarding**: Interactive guided tour for new users explaining platform features
-- **Profile Creation**: Users submit username and resume text for AI analysis
-- **Skill Extraction**: AI models process resume content to identify technical skills
-- **Assessment**: Multi-question technical evaluation with open-ended responses
-- **Assessment Panel**: AI-powered coding exercise generation with upload/connect capabilities
-- **AI Course Generation**: Personalized learning paths created based on resume analysis
-- **Real-time Progress Tracking**: Monitor learning activities and course completion with detailed timestamps
-- **Progress Dashboard**: Enhanced timeline showing each step completion with hover details
-- **Manual Overrides**: User-accessible buttons for Re-assess, Update Profile, and Request Review
-- **Admin Management**: Complete admin dashboard for user oversight and analytics
-- **Gen AI Documentation**: Comprehensive overview of all AI technologies and models used
-- **Data Persistence**: All user data and results stored in PostgreSQL for session continuity
+- **Agent-Driven User Journey**: Every user action triggers agent processing for intelligent responses
+- **Profile Creation**: Users submit username and resume → ProfileAgent processes via EventBus
+- **Skill Extraction**: ProfileAgent analyzes resume content and emits skill data for other agents
+- **Gamification Initialization**: GamificationAgent creates user profile with initial points and achievements
+- **Assessment Generation**: AssessmentAgent creates personalized coding challenges based on extracted skills
+- **Learning Path Creation**: LearningPathAgent generates customized curricula from assessment results
+- **Progress Tracking**: AnalyticsAgent monitors all user activities and generates insights
+- **Hackathon Participation**: HackathonAgent manages competitions with automated scoring and ranking
+- **Real-time Analytics**: All agents contribute data for comprehensive user analytics dashboard
+- **Event-Based Communication**: Agents communicate asynchronously through EventBus for scalable processing
+- **API Integration**: Comprehensive agent API endpoints for external integration and monitoring
+- **Data Persistence**: Agent state and event history stored in PostgreSQL for reliability and analysis
 
 ## Recent Changes (2025-08-08)
-- **Assessment Panel Enhanced**: Updated with improved dark theme styling and enhanced UI components
-- **Playful Loading Animations**: Added animated robot with blinking eyes, floating code particles, and rotating messages
-- **Real API Integration**: Connected assessment panel to actual backend exercise generation endpoints
-- **Form Improvements**: Enhanced form validation, interactive dropdowns, and better error handling
-- **Visual Enhancements**: Added gradient buttons, card hover effects, and professional dark theme
-- **User Experience**: Improved loading states, success messages, and clipboard functionality
+- **Complete Agent System Architecture**: Built comprehensive 6-agent system with EventBus communication
+  - ProfileAgent: Advanced resume analysis and skill extraction
+  - AssessmentAgent: Automated exercise generation and evaluation
+  - GamificationAgent: Points, badges, achievements, and leaderboard systems
+  - LearningPathAgent: Personalized curriculum generation and progress tracking
+  - HackathonAgent: Coding competition management with automated scoring
+  - AnalyticsAgent: Platform-wide analytics and user behavior insights
+- **Database Schema Enhancement**: Extended models with agent-specific fields and comprehensive tracking
+- **API Integration**: Added 15+ agent API endpoints for external integration and monitoring
+- **Event-Driven Architecture**: Implemented asynchronous agent communication with event history
+- **Real-time Processing**: All user actions processed through agent system for intelligent responses
+- **Scalable Design**: Event-driven architecture supports horizontal scaling and microservices transition
 
 # External Dependencies
 

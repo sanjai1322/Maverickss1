@@ -6,7 +6,7 @@ import PyPDF2
 from docx import Document
 from io import BytesIO
 from datetime import datetime, timedelta
-from app import app, db
+from app import app, db, agent_system
 from ai_course_generator import CourseGenerator
 
 logger = logging.getLogger(__name__)

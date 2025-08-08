@@ -1,10 +1,14 @@
 import os
 import json
+import logging
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
 
 
 class Base(DeclarativeBase):
@@ -41,5 +45,12 @@ with app.app_context():
     # Make sure to import the models here or their tables won't be created
     import models  # noqa: F401
     import models_admin  # noqa: F401
-
+    
     db.create_all()
+    logging.info("Database tables created successfully")
+
+# Initialize agent system
+from agent_system import init_agent_system
+agent_system = init_agent_system(app)
+
+logging.info("Flask application and agent system initialized")
