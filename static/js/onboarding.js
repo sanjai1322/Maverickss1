@@ -92,7 +92,8 @@ class OnboardingTour {
         const target = document.querySelector(step.target);
 
         if (!target) {
-            // Skip to next step if target not found
+            // Update current step before skipping to prevent infinite loop
+            this.currentStep = stepIndex;
             this.next();
             return;
         }
