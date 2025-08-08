@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="maverick-heading">
+                    <i class="fas fa-users me-2"></i>
+                    User Management
+                </h1>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-search me-2"></i>Search & Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search Username</label>
+                            <input type="text" class="form-control" id="search" name="search" value="{{ search }}" placeholder="Enter username...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="skill" class="form-label">Filter by Skill</label>
+                            <input type="text" class="form-control" id="skill" name="skill" value="{{ skill_filter }}" placeholder="e.g., Python, JavaScript">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="score" class="form-label">Minimum Score</label>
+                            <input type="number" class="form-control" id="score" name="score" value="{{ score_filter }}" min="0" max="100" placeholder="0-100">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Search
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Users ({{ users|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Skills</th>
+                                        <th>Assessment Score</th>
+                                        <th>Status</th>
+                                        <th>Last Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2">
+                                                    {{ user.username[0].upper() }}
+                                                </div>
+                                                <strong>{{ user.username }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if user.skills %}
+                                                {% set skills_list = user.skills.split(',')[:3] %}
+                                                {% for skill in skills_list %}
+                                                    <span class="badge bg-secondary me-1">{{ skill.strip() }}</span>
+                                                {% endfor %}
+                                                {% if user.skills.split(',') | length > 3 %}
+                                                    <small class="text-muted">+{{ user.skills.split(',') | length - 3 }} more</small>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">No skills identified</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if hasattr(user, 'parsed_score') and user.parsed_score %}
+                                                <span class="badge {% if user.parsed_score >= 80 %}bg-success{% elif user.parsed_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ user.parsed_score }}/100
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">Not assessed</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="progress-nodes">
+                                                <span class="node {% if user.profile_created_at %}completed{% endif %}" title="Profile Created">1</span>
+                                                <span class="node {% if user.assessment_completed_at %}completed{% endif %}" title="Assessment Completed">2</span>
+                                                <span class="node {% if user.skills_evaluated_at %}completed{% endif %}" title="Skills Evaluated">3</span>
+                                                <span class="node {% if user.learning_path_generated_at %}completed{% endif %}" title="Learning Path Generated">4</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {% if user.assessment_completed_at %}
+                                                    {{ user.assessment_completed_at.strftime('%m/%d/%Y') }}
+                                                {% elif user.skills_evaluated_at %}
+                                                    {{ user.skills_evaluated_at.strftime('%m/%d/%Y') }}
+                                                {% else %}
+                                                    {{ user.created_at.strftime('%m/%d/%Y') if user.created_at }}
+                                                {% endif %}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('admin_user_detail', username=user.username) }}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <form method="POST" action="{{ url_for('admin_reassess_user', username=user.username) }}" style="display: inline;" onsubmit="return confirm('Reset assessment for {{ user.username }}?')">
+                                                    <button type="submit" class="btn btn-sm btn-outline-warning" title="Reset Assessment">
+                                                        <i class="fas fa-redo"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-users fa-3x mb-3 opacity-50"></i>
+                            <p>No users found matching your criteria.</p>
+                            {% if search or skill_filter or score_filter %}
+                                <a href="{{ url_for('admin_users') }}" class="btn btn-outline-primary">Clear Filters</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.progress-nodes {
+    display: flex;
+    gap: 5px;
+}
+
+.progress-nodes .node {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.progress-nodes .node.completed {
+    background-color: #28a745;
+}
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: bold;
+}
+</style>
+{% endblock %}

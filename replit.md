@@ -25,13 +25,19 @@ Branding: "Mavericks" with rocket theme and blue gradient color scheme.
 
 ## Database Design
 - **Storage**: PostgreSQL database with comprehensive user management and course tracking
-- **Schema**: 
+- **User Management Schema**: 
   - Users: Store username, extracted skills, assessment scores, resume text, and timestamps
   - TailoredCourse: AI-generated courses with completion tracking
   - CourseModule: Individual learning modules within courses
   - ProgressTracking: Real-time activity and progress monitoring
   - LearningPath: Traditional learning path modules
   - Hackathon: Challenge submissions and scoring
+- **Admin Management Schema**:
+  - AdminUser: Administrator accounts with authentication
+  - UserActivity: Detailed user activity logs for analytics
+  - UserReport: Generated reports for users and administrators
+  - SystemAnalytics: Platform-wide metrics and performance data
+  - Achievement: User badges and achievement tracking system
 - **Data Format**: Skills and course data stored as JSON strings for flexible structure
 - **Connection Management**: SQLAlchemy ORM with connection pooling and pre-ping for reliability
 
@@ -49,8 +55,10 @@ Branding: "Mavericks" with rocket theme and blue gradient color scheme.
 - **Skill Extraction**: AI models process resume content to identify technical skills
 - **Assessment**: Multi-question technical evaluation with open-ended responses
 - **AI Course Generation**: Personalized learning paths created based on resume analysis
-- **Real-time Progress Tracking**: Monitor learning activities and course completion
-- **Progress Tracking**: Dashboard displaying extracted skills and assessment scores
+- **Real-time Progress Tracking**: Monitor learning activities and course completion with detailed timestamps
+- **Progress Dashboard**: Enhanced timeline showing each step completion with hover details
+- **Manual Overrides**: User-accessible buttons for Re-assess, Update Profile, and Request Review
+- **Admin Management**: Complete admin dashboard for user oversight and analytics
 - **Data Persistence**: All user data and results stored in PostgreSQL for session continuity
 
 # External Dependencies

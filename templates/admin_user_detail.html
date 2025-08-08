@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }} - User Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="maverick-heading">
+                    <i class="fas fa-user me-2"></i>
+                    {{ user.username }} - Details
+                </h1>
+                <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Users
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Overview -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>User Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Username:</strong> {{ user.username }}<br>
+                            <strong>Created:</strong> {{ user.created_at.strftime('%m/%d/%Y %H:%M') if user.created_at }}<br>
+                            <strong>Skills:</strong> 
+                            {% if user.skills %}
+                                <div class="mt-1">
+                                    {% for skill in user.skills.split(',') %}
+                                        <span class="badge bg-secondary me-1">{{ skill.strip() }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <span class="text-muted">No skills identified</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Assessment Score:</strong>
+                            {% if score_data %}
+                                <span class="badge {% if score_data.total_score >= 80 %}bg-success{% elif score_data.total_score >= 60 %}bg-warning{% else %}bg-danger{% endif %} ms-1">
+                                    {{ score_data.total_score }}/100
+                                </span>
+                            {% else %}
+                                <span class="text-muted">Not completed</span>
+                            {% endif %}<br>
+                            <strong>Assessment Date:</strong> {{ user.assessment_completed_at.strftime('%m/%d/%Y %H:%M') if user.assessment_completed_at else 'Not completed' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Admin Actions</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_reassess_user', username=user.username) }}" onsubmit="return confirm('Reset assessment for {{ user.username }}? This will allow them to retake the assessment.')">
+                        <button type="submit" class="btn btn-warning btn-sm w-100 mb-2">
+                            <i class="fas fa-redo"></i> Reset Assessment
+                        </button>
+                    </form>
+                    <a href="{{ url_for('progress', username=user.username) }}" class="btn btn-info btn-sm w-100 mb-2">
+                        <i class="fas fa-chart-line"></i> View Progress
+                    </a>
+                    <button class="btn btn-secondary btn-sm w-100" onclick="generateReport('{{ user.username }}')">
+                        <i class="fas fa-file-alt"></i> Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Timeline -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-timeline me-2"></i>Progress Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress-timeline">
+                        <div class="timeline-item {% if user.profile_created_at %}completed{% endif %}">
+                            <div class="timeline-marker">1</div>
+                            <div class="timeline-content">
+                                <h6>Profile Created</h6>
+                                <small class="text-muted">
+                                    {% if user.profile_created_at %}
+                                        {{ user.profile_created_at.strftime('%m/%d/%Y %H:%M') }}
+                                    {% else %}
+                                        Not completed
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="timeline-item {% if user.assessment_completed_at %}completed{% endif %}">
+                            <div class="timeline-marker">2</div>
+                            <div class="timeline-content">
+                                <h6>Assessment Completed</h6>
+                                <small class="text-muted">
+                                    {% if user.assessment_completed_at %}
+                                        {{ user.assessment_completed_at.strftime('%m/%d/%Y %H:%M') }}
+                                        {% if score_data %}
+                                            - Score: {{ score_data.total_score }}/100
+                                        {% endif %}
+                                    {% else %}
+                                        Not completed
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="timeline-item {% if user.skills_evaluated_at %}completed{% endif %}">
+                            <div class="timeline-marker">3</div>
+                            <div class="timeline-content">
+                                <h6>Skills Evaluated</h6>
+                                <small class="text-muted">
+                                    {% if user.skills_evaluated_at %}
+                                        {{ user.skills_evaluated_at.strftime('%m/%d/%Y %H:%M') }}
+                                    {% else %}
+                                        Not completed
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="timeline-item {% if user.learning_path_generated_at %}completed{% endif %}">
+                            <div class="timeline-marker">4</div>
+                            <div class="timeline-content">
+                                <h6>Learning Path Generated</h6>
+                                <small class="text-muted">
+                                    {% if user.learning_path_generated_at %}
+                                        {{ user.learning_path_generated_at.strftime('%m/%d/%Y %H:%M') }}
+                                    {% else %}
+                                        Not completed
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Learning Paths and Courses -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-route me-2"></i>Learning Paths ({{ learning_paths|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if learning_paths %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Module</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for path in learning_paths %}
+                                    <tr>
+                                        <td>{{ path.module_name }}</td>
+                                        <td><small>{{ path.estimated_time }}m</small></td>
+                                        <td>
+                                            <span class="badge {% if path.completion_status == 'Completed' %}bg-success{% elif path.completion_status == 'In Progress' %}bg-warning{% else %}bg-secondary{% endif %} badge-sm">
+                                                {{ path.completion_status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No learning paths generated</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>AI Courses ({{ courses|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if courses %}
+                        {% for course in courses %}
+                            <div class="mb-3">
+                                <h6>{{ course.course_title }}</h6>
+                                <p class="small text-muted mb-1">{{ course.course_description }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-info">{{ course.difficulty_level }}</span>
+                                    <div class="progress" style="width: 100px;">
+                                        <div class="progress-bar" style="width: {{ course.completion_percentage }}%"></div>
+                                    </div>
+                                    <small class="text-muted">{{ course.completion_percentage }}%</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No AI courses generated</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hackathon Submissions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Hackathon Submissions ({{ hackathon_submissions|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if hackathon_submissions %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Challenge</th>
+                                        <th>Submitted</th>
+                                        <th>Score</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for submission in hackathon_submissions %}
+                                    <tr>
+                                        <td>{{ submission.challenge_name }}</td>
+                                        <td>{{ submission.submitted_at.strftime('%m/%d/%Y %H:%M') }}</td>
+                                        <td>
+                                            {% if submission.score %}
+                                                <span class="badge bg-primary">{{ submission.score }}/100</span>
+                                            {% else %}
+                                                <span class="text-muted">Not scored</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="viewSubmission('{{ submission.id }}')">
+                                                <i class="fas fa-eye"></i> View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No hackathon submissions</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.progress-timeline {
+    position: relative;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 40px;
+    width: 2px;
+    height: 20px;
+    background-color: #dee2e6;
+}
+
+.timeline-item.completed::after {
+    background-color: #28a745;
+}
+
+.timeline-marker {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.timeline-item.completed .timeline-marker {
+    background-color: #28a745;
+}
+
+.timeline-content h6 {
+    margin-bottom: 2px;
+}
+</style>
+
+<script>
+function generateReport(username) {
+    alert('Report generation feature will be implemented in the next update.');
+}
+
+function viewSubmission(submissionId) {
+    alert('Submission viewing feature will be implemented in the next update.');
+}
+</script>
+{% endblock %}

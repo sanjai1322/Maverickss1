@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Mavericks{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="maverick-heading">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    Admin Dashboard
+                </h1>
+                <div>
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-users"></i> Manage Users
+                    </a>
+                    <a href="{{ url_for('admin_reports') }}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-bar"></i> Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="small">Total Users</div>
+                            <div class="h2 mb-0">{{ metrics.total_users }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="small">Assessments Completed</div>
+                            <div class="h2 mb-0">{{ metrics.users_with_assessments }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="small">Completion Rate</div>
+                            <div class="h2 mb-0">{{ metrics.assessment_completion_rate }}%</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-percentage fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="small">Hackathon Submissions</div>
+                            <div class="h2 mb-0">{{ metrics.total_hackathon_submissions }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-trophy fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-clock me-2"></i>
+                        Recent Users
+                    </h5>
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Skills</th>
+                                        <th>Assessment Status</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in recent_users %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ user.username }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if user.skills %}
+                                                <span class="badge bg-secondary me-1">{{ user.skills.split(',')[0] }}</span>
+                                                {% if user.skills.split(',') | length > 1 %}
+                                                    <small class="text-muted">+{{ user.skills.split(',') | length - 1 }} more</small>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">No skills</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if user.assessment_completed_at %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ user.created_at.strftime('%m/%d/%Y %H:%M') if user.created_at }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('admin_user_detail', username=user.username) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-users fa-3x mb-3 opacity-50"></i>
+                            <p>No users yet. Users will appear here once they start using the platform.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto refresh dashboard every 30 seconds
+    setTimeout(function() {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}

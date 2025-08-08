@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Hackathon Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="maverick-heading">
+                    <i class="fas fa-trophy me-2"></i>
+                    Hackathon Management
+                </h1>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hackathon Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Hackathon Overview</h5>
+                </div>
+                <div class="card-body">
+                    {% if hackathons %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Challenge Name</th>
+                                        <th>Total Submissions</th>
+                                        <th>Average Score</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for hackathon in hackathons %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ hackathon.challenge_name }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ hackathon.submission_count }} submissions</span>
+                                        </td>
+                                        <td>
+                                            {% if hackathon.avg_score %}
+                                                <span class="badge {% if hackathon.avg_score >= 80 %}bg-success{% elif hackathon.avg_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ "%.1f"|format(hackathon.avg_score) }}/100
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">Not scored</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="viewChallengeDetails('{{ hackathon.challenge_name }}')">
+                                                <i class="fas fa-eye"></i> View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-trophy fa-3x mb-3 opacity-50"></i>
+                            <p>No hackathon challenges yet. Challenges will appear here once users start participating.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Submissions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Recent Submissions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_submissions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Challenge</th>
+                                        <th>Submitted</th>
+                                        <th>Score</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for submission in recent_submissions %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2">
+                                                    {{ submission.username[0].upper() }}
+                                                </div>
+                                                <a href="{{ url_for('admin_user_detail', username=submission.username) }}" class="text-decoration-none">
+                                                    {{ submission.username }}
+                                                </a>
+                                            </div>
+                                        </td>
+                                        <td>{{ submission.challenge_name }}</td>
+                                        <td>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                {{ submission.submitted_at.strftime('%m/%d/%Y %H:%M') }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            {% if submission.score %}
+                                                <span class="badge {% if submission.score >= 80 %}bg-success{% elif submission.score >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ submission.score }}/100
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">Not scored</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-sm btn-outline-primary" onclick="viewSubmissionDetail({{ submission.id }})">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% if not submission.score %}
+                                                    <button class="btn btn-sm btn-outline-success" onclick="scoreSubmission({{ submission.id }})">
+                                                        <i class="fas fa-star"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                            <p>No submissions yet. Recent hackathon submissions will appear here.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: bold;
+}
+</style>
+
+<script>
+function viewChallengeDetails(challengeName) {
+    alert('Challenge details for "' + challengeName + '" will be implemented in the next update.');
+}
+
+function viewSubmissionDetail(submissionId) {
+    alert('Submission detail view will be implemented in the next update.');
+}
+
+function scoreSubmission(submissionId) {
+    const score = prompt('Enter score (0-100) for this submission:');
+    if (score && score >= 0 && score <= 100) {
+        alert('Scoring functionality will be implemented in the next update.');
+        // TODO: Implement actual scoring functionality
+    }
+}
+</script>
+{% endblock %}

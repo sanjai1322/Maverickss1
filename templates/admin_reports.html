@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Analytics - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="maverick-heading">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Reports & Analytics
+                </h1>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Registration Trends -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>User Registration Trends (Last 30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    {% if user_stats %}
+                        <canvas id="userRegistrationChart" width="400" height="200"></canvas>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-chart-line fa-3x mb-3 opacity-50"></i>
+                            <p>No registration data available yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Assessment Completion Trends</h5>
+                </div>
+                <div class="card-body">
+                    {% if assessment_stats %}
+                        <canvas id="assessmentChart" width="400" height="200"></canvas>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-clipboard-check fa-3x mb-3 opacity-50"></i>
+                            <p>No assessment data available yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Skills -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-star me-2"></i>Most Popular Skills</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_skills %}
+                        <div class="row">
+                            {% for skill, count in top_skills %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-primary">{{ skill }}</span>
+                                        <div class="flex-grow-1 mx-3">
+                                            <div class="progress" style="height: 8px;">
+                                                <div class="progress-bar" style="width: {{ (count / top_skills[0][1]) * 100 }}%"></div>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ count }} users</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-code fa-3x mb-3 opacity-50"></i>
+                            <p>No skill data available yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-download me-2"></i>Export Options</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="exportData('users')">
+                            <i class="fas fa-users"></i> Export User Data
+                        </button>
+                        <button class="btn btn-outline-success" onclick="exportData('assessments')">
+                            <i class="fas fa-clipboard-check"></i> Export Assessments
+                        </button>
+                        <button class="btn btn-outline-info" onclick="exportData('skills')">
+                            <i class="fas fa-code"></i> Export Skills Report
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="exportData('hackathons')">
+                            <i class="fas fa-trophy"></i> Export Hackathon Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raw Data Tables -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-table me-2"></i>Recent Registration Data</h5>
+                </div>
+                <div class="card-body">
+                    {% if user_stats %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Registrations</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in user_stats[:10] %}
+                                    <tr>
+                                        <td>{{ stat.date.strftime('%m/%d/%Y') if stat.date else 'N/A' }}</td>
+                                        <td>{{ stat.count }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No registration data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-table me-2"></i>Recent Assessment Data</h5>
+                </div>
+                <div class="card-body">
+                    {% if assessment_stats %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Completions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in assessment_stats[:10] %}
+                                    <tr>
+                                        <td>{{ stat.date.strftime('%m/%d/%Y') if stat.date else 'N/A' }}</td>
+                                        <td>{{ stat.count }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No assessment data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// User Registration Chart
+{% if user_stats %}
+const userCtx = document.getElementById('userRegistrationChart').getContext('2d');
+const userChart = new Chart(userCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for stat in user_stats|reverse %}'{{ stat.date.strftime('%m/%d') if stat.date else 'N/A' }}'{{ ',' if not loop.last }}{% endfor %}],
+        datasets: [{
+            label: 'New Users',
+            data: [{% for stat in user_stats|reverse %}{{ stat.count }}{{ ',' if not loop.last }}{% endfor %}],
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+// Assessment Completion Chart
+{% if assessment_stats %}
+const assessmentCtx = document.getElementById('assessmentChart').getContext('2d');
+const assessmentChart = new Chart(assessmentCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for stat in assessment_stats|reverse %}'{{ stat.date.strftime('%m/%d') if stat.date else 'N/A' }}'{{ ',' if not loop.last }}{% endfor %}],
+        datasets: [{
+            label: 'Assessments Completed',
+            data: [{% for stat in assessment_stats|reverse %}{{ stat.count }}{{ ',' if not loop.last }}{% endfor %}],
+            backgroundColor: '#28a745'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+function exportData(type) {
+    alert('Export ' + type + ' feature will be implemented in the next update.');
+}
+</script>
+{% endblock %}

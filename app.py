@@ -41,6 +41,7 @@ db.init_app(app)
 with app.app_context():
     # Import models to ensure tables are created
     import models  # noqa: F401
+    import models_admin  # noqa: F401
     db.create_all()
     logger.info("Database tables created successfully")
 
@@ -905,6 +906,297 @@ def api_recent_activities():
         logger.error(f"Error getting recent activities: {str(e)}")
         return jsonify({'activities': []})
 
+
+# Admin Dashboard Routes
+@app.route('/admin')
+def admin_dashboard():
+    """Admin dashboard with user management and analytics."""
+    try:
+        from models import User, LearningPath, Hackathon, TailoredCourse
+        from models_admin import UserActivity, SystemAnalytics, Achievement
+        
+        # Get user statistics
+        total_users = User.query.count()
+        users_with_assessments = User.query.filter(User.assessment_completed_at.isnot(None)).count()
+        total_hackathon_submissions = Hackathon.query.count()
+        total_courses = TailoredCourse.query.count()
+        
+        # Get recent users
+        recent_users = User.query.order_by(User.created_at.desc()).limit(10).all()
+        
+        # Get system metrics
+        metrics = {
+            'total_users': total_users,
+            'users_with_assessments': users_with_assessments,
+            'assessment_completion_rate': round((users_with_assessments / max(total_users, 1)) * 100, 1),
+            'total_hackathon_submissions': total_hackathon_submissions,
+            'total_courses': total_courses
+        }
+        
+        return render_template('admin_dashboard.html', 
+                             metrics=metrics, 
+                             recent_users=recent_users)
+        
+    except Exception as e:
+        logger.error(f"Error loading admin dashboard: {str(e)}")
+        flash('Error loading admin dashboard', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/admin/users')
+def admin_users():
+    """Admin user management page with search and filters."""
+    try:
+        from models import User
+        
+        # Get search parameters
+        search = request.args.get('search', '')
+        skill_filter = request.args.get('skill', '')
+        score_filter = request.args.get('score', '')
+        
+        # Build query
+        query = User.query
+        
+        if search:
+            query = query.filter(User.username.contains(search))
+        
+        if skill_filter:
+            query = query.filter(User.skills.contains(skill_filter))
+            
+        users = query.order_by(User.created_at.desc()).all()
+        
+        # Parse scores for filtering
+        filtered_users = []
+        for user in users:
+            try:
+                score_data = json.loads(user.scores) if user.scores else None
+                user_score = score_data.get('total_score', 0) if score_data else 0
+                
+                if score_filter:
+                    min_score = int(score_filter)
+                    if user_score < min_score:
+                        continue
+                        
+                user.parsed_score = user_score
+                filtered_users.append(user)
+            except:
+                user.parsed_score = 0
+                if not score_filter:
+                    filtered_users.append(user)
+        
+        return render_template('admin_users.html', users=filtered_users, 
+                             search=search, skill_filter=skill_filter, score_filter=score_filter)
+        
+    except Exception as e:
+        logger.error(f"Error loading admin users: {str(e)}")
+        flash('Error loading users', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/user/<username>')
+def admin_user_detail(username):
+    """Detailed view of a specific user for admin."""
+    try:
+        from models import User, LearningPath, Hackathon, TailoredCourse, ProgressTracking
+        
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            flash('User not found', 'error')
+            return redirect(url_for('admin_users'))
+        
+        # Get user's learning paths
+        learning_paths = LearningPath.query.filter_by(username=username).all()
+        
+        # Get hackathon submissions
+        hackathon_submissions = Hackathon.query.filter_by(username=username).all()
+        
+        # Get tailored courses
+        courses = TailoredCourse.query.filter_by(username=username).all()
+        
+        # Get progress tracking
+        progress_records = ProgressTracking.query.filter_by(username=username).order_by(ProgressTracking.timestamp.desc()).limit(20).all()
+        
+        # Parse assessment scores
+        score_data = None
+        if user.scores:
+            try:
+                score_data = json.loads(user.scores)
+            except:
+                score_data = {'total_score': 0}
+        
+        return render_template('admin_user_detail.html', 
+                             user=user, 
+                             score_data=score_data,
+                             learning_paths=learning_paths,
+                             hackathon_submissions=hackathon_submissions,
+                             courses=courses,
+                             progress_records=progress_records)
+        
+    except Exception as e:
+        logger.error(f"Error loading user detail: {str(e)}")
+        flash('Error loading user details', 'error')
+        return redirect(url_for('admin_users'))
+
+@app.route('/admin/reports')
+def admin_reports():
+    """Admin reports and analytics page."""
+    try:
+        from models import User, LearningPath, Hackathon, TailoredCourse
+        from sqlalchemy import func
+        
+        # User registration trends
+        user_stats = db.session.query(
+            func.date(User.created_at).label('date'),
+            func.count(User.id).label('count')
+        ).group_by(func.date(User.created_at)).order_by(func.date(User.created_at).desc()).limit(30).all()
+        
+        # Assessment completion rates
+        assessment_stats = db.session.query(
+            func.date(User.assessment_completed_at).label('date'),
+            func.count(User.id).label('count')
+        ).filter(User.assessment_completed_at.isnot(None)).group_by(func.date(User.assessment_completed_at)).order_by(func.date(User.assessment_completed_at).desc()).limit(30).all()
+        
+        # Top skills
+        all_users = User.query.all()
+        skill_counts = {}
+        for user in all_users:
+            if user.skills:
+                skills = [skill.strip() for skill in user.skills.split(',')]
+                for skill in skills:
+                    skill_counts[skill] = skill_counts.get(skill, 0) + 1
+        
+        top_skills = sorted(skill_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+        
+        return render_template('admin_reports.html', 
+                             user_stats=user_stats,
+                             assessment_stats=assessment_stats,
+                             top_skills=top_skills)
+        
+    except Exception as e:
+        logger.error(f"Error loading admin reports: {str(e)}")
+        flash('Error loading reports', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/reassess/<username>', methods=['POST'])
+def admin_reassess_user(username):
+    """Admin manual reassessment trigger."""
+    try:
+        from models import User
+        
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            flash('User not found', 'error')
+            return redirect(url_for('admin_users'))
+        
+        # Reset assessment data
+        user.scores = None
+        user.assessment_completed_at = None
+        db.session.commit()
+        
+        flash(f'Assessment reset for {username}. User can now retake the assessment.', 'success')
+        logger.info(f"Admin reset assessment for {username}")
+        
+        return redirect(url_for('admin_user_detail', username=username))
+        
+    except Exception as e:
+        logger.error(f"Error resetting assessment: {str(e)}")
+        flash('Error resetting assessment', 'error')
+        return redirect(url_for('admin_users'))
+
+@app.route('/admin/hackathons')
+def admin_hackathons():
+    """Admin hackathon management."""
+    try:
+        from models import Hackathon
+        
+        # Get all hackathon submissions grouped by challenge
+        hackathons = db.session.query(
+            Hackathon.challenge_name,
+            func.count(Hackathon.id).label('submission_count'),
+            func.avg(Hackathon.score).label('avg_score')
+        ).group_by(Hackathon.challenge_name).all()
+        
+        # Get recent submissions
+        recent_submissions = Hackathon.query.order_by(Hackathon.submitted_at.desc()).limit(20).all()
+        
+        return render_template('admin_hackathons.html', 
+                             hackathons=hackathons,
+                             recent_submissions=recent_submissions)
+        
+    except Exception as e:
+        logger.error(f"Error loading admin hackathons: {str(e)}")
+        flash('Error loading hackathon data', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+# Manual Override Routes
+@app.route('/reassess', methods=['POST'])
+def reassess_user():
+    """Allow user to request reassessment."""
+    username = session.get('username')
+    if not username:
+        flash('Please log in first.', 'error')
+        return redirect(url_for('profile'))
+    
+    try:
+        from models import User
+        
+        user = User.query.filter_by(username=username).first()
+        if user:
+            # Reset assessment to allow retake
+            user.scores = None
+            user.assessment_completed_at = None
+            db.session.commit()
+            flash('Assessment reset! You can now retake the assessment.', 'success')
+            return redirect(url_for('assessment'))
+        else:
+            flash('User not found.', 'error')
+            return redirect(url_for('profile'))
+    
+    except Exception as e:
+        logger.error(f"Error during reassessment: {str(e)}")
+        flash('Error resetting assessment. Please try again.', 'error')
+        return redirect(url_for('progress'))
+
+@app.route('/update-profile', methods=['POST'])
+def update_profile_request():
+    """Allow user to update their profile."""
+    username = session.get('username')
+    if not username:
+        flash('Please log in first.', 'error')
+        return redirect(url_for('profile'))
+    
+    flash('You can update your profile by uploading a new resume.', 'info')
+    return redirect(url_for('profile'))
+
+@app.route('/request-review', methods=['POST'])
+def request_review():
+    """Allow user to request manual review."""
+    username = session.get('username')
+    if not username:
+        flash('Please log in first.', 'error')
+        return redirect(url_for('profile'))
+    
+    try:
+        from models_admin import UserActivity
+        
+        # Log the review request
+        activity = UserActivity(
+            username=username,
+            activity_type='review_requested',
+            activity_details=json.dumps({
+                'requested_at': datetime.utcnow().isoformat(),
+                'request_type': 'manual_review'
+            })
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        flash('Review request submitted! An admin will review your profile soon.', 'success')
+        logger.info(f"Review requested by {username}")
+        
+    except Exception as e:
+        logger.error(f"Error submitting review request: {str(e)}")
+        flash('Error submitting review request. Please try again.', 'error')
+    
+    return redirect(url_for('progress'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

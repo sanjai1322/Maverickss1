@@ -149,20 +149,148 @@
 </div>
 {% endif %}
 
+<!-- Progress Bar with Detailed Timestamps -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-route me-2"></i>
+                    Progress Timeline
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="progress-timeline">
+                    <div class="timeline-item {% if user_data.profile_created_at %}completed{% endif %}">
+                        <div class="timeline-marker">1</div>
+                        <div class="timeline-content">
+                            <h6>Profile Created</h6>
+                            <small class="text-muted">
+                                {% if user_data.profile_created_at %}
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ user_data.profile_created_at.strftime('%m/%d/%Y at %H:%M') }}
+                                {% else %}
+                                    Not completed
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="timeline-item {% if user_data.assessment_completed_at %}completed{% endif %}">
+                        <div class="timeline-marker">2</div>
+                        <div class="timeline-content">
+                            <h6>Assessment Completed</h6>
+                            <small class="text-muted">
+                                {% if user_data.assessment_completed_at %}
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ user_data.assessment_completed_at.strftime('%m/%d/%Y at %H:%M') }}
+                                    {% if score_data %}
+                                        <br><i class="fas fa-chart-bar me-1"></i>
+                                        Score: {{ score_data.total_score }}/100
+                                    {% endif %}
+                                {% else %}
+                                    Not completed
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="timeline-item {% if user_data.skills_evaluated_at %}completed{% endif %}">
+                        <div class="timeline-marker">3</div>
+                        <div class="timeline-content">
+                            <h6>Skills Evaluated</h6>
+                            <small class="text-muted">
+                                {% if user_data.skills_evaluated_at %}
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ user_data.skills_evaluated_at.strftime('%m/%d/%Y at %H:%M') }}
+                                {% else %}
+                                    Not completed
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="timeline-item {% if user_data.learning_path_generated_at %}completed{% endif %}">
+                        <div class="timeline-marker">4</div>
+                        <div class="timeline-content">
+                            <h6>Learning Path Generated</h6>
+                            <small class="text-muted">
+                                {% if user_data.learning_path_generated_at %}
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ user_data.learning_path_generated_at.strftime('%m/%d/%Y at %H:%M') }}
+                                {% else %}
+                                    Not completed
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manual Override Buttons -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools me-2"></i>
+                    Manual Overrides
+                </h5>
+                <p class="text-muted mb-0 small">Need help or want to make changes? Use these options if manual intervention is needed.</p>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <form method="POST" action="{{ url_for('reassess_user') }}" onsubmit="return confirm('This will reset your assessment. You will need to retake it. Continue?')">
+                            <button type="submit" class="btn btn-warning w-100">
+                                <i class="fas fa-redo me-2"></i>
+                                Re-assess
+                            </button>
+                            <small class="text-muted d-block mt-1">Reset and retake your assessment</small>
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+                        <form method="POST" action="{{ url_for('update_profile_request') }}">
+                            <button type="submit" class="btn btn-info w-100">
+                                <i class="fas fa-user-edit me-2"></i>
+                                Update Profile
+                            </button>
+                            <small class="text-muted d-block mt-1">Modify your profile information</small>
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+                        <form method="POST" action="{{ url_for('request_review') }}">
+                            <button type="submit" class="btn btn-secondary w-100">
+                                <i class="fas fa-eye me-2"></i>
+                                Request Review
+                            </button>
+                            <small class="text-muted d-block mt-1">Get manual review from admin</small>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row mt-4">
     <div class="col-12">
         <div class="card bg-dark">
             <div class="card-body text-center">
                 <h5 class="card-title">What's Next?</h5>
-                <p class="card-text">Ready to improve your skills or retake the assessment?</p>
+                <p class="card-text">Continue your learning journey with personalized courses and challenges.</p>
                 <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                    <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-edit me-1"></i>
-                        Update Profile
+                    <a href="{{ url_for('learning_path') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-route me-1"></i>
+                        Learning Paths
                     </a>
-                    <a href="{{ url_for('assessment') }}" class="btn btn-primary">
-                        <i class="fas fa-redo me-1"></i>
-                        Retake Assessment
+                    <a href="{{ url_for('tailored_courses') }}" class="btn btn-outline-success">
+                        <i class="fas fa-graduation-cap me-1"></i>
+                        AI Courses
+                    </a>
+                    <a href="{{ url_for('hackathon') }}" class="btn btn-outline-warning">
+                        <i class="fas fa-trophy me-1"></i>
+                        Hackathons
                     </a>
                 </div>
             </div>
@@ -173,6 +301,96 @@
 
 {% block scripts %}
 <style>
+/* Progress Timeline Styling */
+.progress-timeline {
+    position: relative;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 45px;
+    width: 2px;
+    height: 25px;
+    background-color: #dee2e6;
+    z-index: 1;
+}
+
+.timeline-item.completed::after {
+    background-color: #28a745;
+}
+
+.timeline-marker {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    margin-right: 15px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    border: 2px solid #fff;
+}
+
+.timeline-item.completed .timeline-marker {
+    background-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
+}
+
+.timeline-content h6 {
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.timeline-content small {
+    line-height: 1.4;
+}
+
+/* Hover effects for timeline items */
+.timeline-item:hover .timeline-marker {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+/* Score circle styling */
+.score-circle .progress {
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.score-circle .progress-bar {
+    border-radius: 50%;
+}
+
+/* Skills container styling */
+.skills-container .badge {
+    font-size: 0.8em;
+    padding: 0.5em 0.75em;
+}
+
+/* Response text styling */
+.response-text {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid var(--bs-primary);
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
 .score-circle .progress {
     border-radius: 50%;
     position: relative;
