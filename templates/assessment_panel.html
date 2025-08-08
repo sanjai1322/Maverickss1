@@ -55,13 +55,13 @@
                                         </small>
                                     </div>
                                     <div class="d-flex gap-2">
-                                        <button class="btn btn-sm btn-primary" onclick="startExercise({{ exercise.id }})">
+                                        <button class="btn btn-sm btn-primary" onclick="startExercise('{{ exercise.id }}')">
                                             <i class="fas fa-play"></i> Start
                                         </button>
-                                        <button class="btn btn-sm btn-outline-info" onclick="previewExercise({{ exercise.id }})">
+                                        <button class="btn btn-sm btn-outline-info" onclick="previewExercise('{{ exercise.id }}')">
                                             <i class="fas fa-eye"></i> Preview
                                         </button>
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="editExercise({{ exercise.id }})">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="editExercise('{{ exercise.id }}')">
                                             <i class="fas fa-edit"></i> Edit
                                         </button>
                                     </div>
@@ -148,7 +148,7 @@
                                 </small>
                             </div>
                             <div>
-                                <button class="btn btn-sm btn-outline-info" onclick="viewResults({{ assessment.id }})">
+                                <button class="btn btn-sm btn-outline-info" onclick="viewResults('{{ assessment.id }}')">
                                     <i class="fas fa-eye"></i> Results
                                 </button>
                             </div>
