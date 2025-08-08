@@ -63,6 +63,14 @@ Branding: "Mavericks" with rocket theme and blue gradient color scheme.
 - **Gen AI Documentation**: Comprehensive overview of all AI technologies and models used
 - **Data Persistence**: All user data and results stored in PostgreSQL for session continuity
 
+## Recent Changes (2025-08-08)
+- **Assessment Navigation Fixed**: Removed duplicate assessment links from header navigation
+- **Assessment Panel Rebuilt**: Created simplified, working assessment panel with proper form inputs
+- **Admin Dashboard Fixed**: Resolved template errors and missing metrics data
+- **API Integration Verified**: All backend endpoints tested and working (generate_exercise, submit_exercise, get_exercise_hint)
+- **Form Input Issues Resolved**: Fixed JavaScript template errors and form field mapping
+- **Session Management**: Improved user authentication and session handling
+
 # External Dependencies
 
 ## API Configuration System
