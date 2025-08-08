@@ -43,6 +43,37 @@
 
     <!-- Status Messages -->
     <div id="statusMessages" class="mt-3"></div>
+
+    <!-- Playful Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay d-none">
+        <div class="loading-container">
+            <div class="loading-animation">
+                <div class="robot-head">
+                    <div class="robot-eyes">
+                        <div class="eye left-eye"></div>
+                        <div class="eye right-eye"></div>
+                    </div>
+                    <div class="robot-mouth"></div>
+                </div>
+                <div class="loading-text">
+                    <span id="loadingMessage">Generating your coding challenge...</span>
+                </div>
+                <div class="code-particles">
+                    <span class="particle">{</span>
+                    <span class="particle">}</span>
+                    <span class="particle">&lt;/&gt;</span>
+                    <span class="particle">( )</span>
+                    <span class="particle">[ ]</span>
+                    <span class="particle">def</span>
+                    <span class="particle">var</span>
+                    <span class="particle">if</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Generate Exercise Modal -->
@@ -116,10 +147,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Show loading state
+        // Show playful loading animation
+        showLoadingAnimation();
+        
         const originalText = generateBtn.innerHTML;
         generateBtn.disabled = true;
-        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+        generateBtn.innerHTML = '<i class="fas fa-magic fa-spin me-1"></i>Generating...';
 
         // Make API request
         fetch('/generate_exercise', {
@@ -142,6 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showMessage('Error generating exercise. Please try again.', 'danger');
         })
         .finally(() => {
+            hideLoadingAnimation();
             generateBtn.disabled = false;
             generateBtn.innerHTML = originalText;
         });
@@ -224,10 +258,247 @@ function startExercise(title) {
 
 function copyCode(code) {
     navigator.clipboard.writeText(code).then(() => {
-        alert('Starter code copied to clipboard!');
+        showMessage('Starter code copied to clipboard!', 'success');
     }).catch(() => {
-        alert('Failed to copy code. Please copy manually.');
+        showMessage('Failed to copy code. Please copy manually.', 'warning');
     });
 }
+
+let loadingMessages = [
+    "🤖 AI is thinking hard...",
+    "⚡ Generating brilliant code challenges...",
+    "🎯 Crafting the perfect exercise...",
+    "💡 Cooking up some coding magic...",
+    "🚀 Building your next challenge...",
+    "🔥 Creating an awesome problem...",
+    "⭐ Designing your coding adventure...",
+    "🎮 Preparing an epic challenge..."
+];
+let messageIndex = 0;
+
+function showLoadingAnimation() {
+    const overlay = document.getElementById('loadingOverlay');
+    const messageEl = document.getElementById('loadingMessage');
+    
+    overlay.classList.remove('d-none');
+    document.body.classList.add('loading-active');
+    
+    // Cycle through loading messages
+    messageIndex = 0;
+    updateLoadingMessage();
+    
+    window.loadingInterval = setInterval(updateLoadingMessage, 2000);
+}
+
+function hideLoadingAnimation() {
+    const overlay = document.getElementById('loadingOverlay');
+    
+    overlay.classList.add('d-none');
+    document.body.classList.remove('loading-active');
+    
+    if (window.loadingInterval) {
+        clearInterval(window.loadingInterval);
+    }
+}
+
+function updateLoadingMessage() {
+    const messageEl = document.getElementById('loadingMessage');
+    messageEl.style.opacity = '0';
+    
+    setTimeout(() => {
+        messageEl.textContent = loadingMessages[messageIndex];
+        messageEl.style.opacity = '1';
+        messageIndex = (messageIndex + 1) % loadingMessages.length;
+    }, 300);
+}
 </script>
+
+<style>
+/* Playful Loading Animation Styles */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.loading-container {
+    text-align: center;
+    color: white;
+}
+
+.loading-animation {
+    animation: bounce 2s infinite;
+}
+
+/* Robot Head Animation */
+.robot-head {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border-radius: 20px;
+    margin: 0 auto 30px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 123, 255, 0.3);
+    animation: robotHead 3s infinite ease-in-out;
+}
+
+.robot-eyes {
+    position: absolute;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+}
+
+.eye {
+    width: 15px;
+    height: 15px;
+    background: #fff;
+    border-radius: 50%;
+    animation: blink 3s infinite;
+}
+
+.robot-mouth {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 15px;
+    border: 3px solid #fff;
+    border-top: none;
+    border-radius: 0 0 15px 15px;
+    animation: talk 1s infinite alternate;
+}
+
+/* Loading Text */
+.loading-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 30px;
+    transition: opacity 0.3s ease;
+}
+
+/* Code Particles */
+.code-particles {
+    height: 60px;
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.particle {
+    position: absolute;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #00ff88;
+    animation: float 3s infinite ease-in-out;
+    opacity: 0.8;
+}
+
+.particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+.particle:nth-child(2) { left: 20%; animation-delay: 0.5s; }
+.particle:nth-child(3) { left: 35%; animation-delay: 1s; }
+.particle:nth-child(4) { left: 50%; animation-delay: 1.5s; }
+.particle:nth-child(5) { left: 65%; animation-delay: 2s; }
+.particle:nth-child(6) { left: 75%; animation-delay: 2.5s; }
+.particle:nth-child(7) { left: 85%; animation-delay: 3s; }
+.particle:nth-child(8) { left: 90%; animation-delay: 3.5s; }
+
+/* Progress Bar */
+.progress-bar {
+    width: 300px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #007bff, #00ff88, #007bff);
+    background-size: 200% 100%;
+    border-radius: 4px;
+    animation: progressWave 2s infinite linear;
+}
+
+/* Animations */
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes robotHead {
+    0%, 100% { transform: rotate(-5deg) scale(1); }
+    50% { transform: rotate(5deg) scale(1.05); }
+}
+
+@keyframes blink {
+    0%, 90%, 100% { transform: scaleY(1); }
+    95% { transform: scaleY(0.1); }
+}
+
+@keyframes talk {
+    0% { height: 15px; }
+    100% { height: 8px; }
+}
+
+@keyframes float {
+    0%, 100% { 
+        transform: translateY(0) rotate(0deg); 
+        opacity: 0.8; 
+    }
+    25% { 
+        transform: translateY(-15px) rotate(90deg); 
+        opacity: 1; 
+    }
+    50% { 
+        transform: translateY(-30px) rotate(180deg); 
+        opacity: 0.6; 
+    }
+    75% { 
+        transform: translateY(-15px) rotate(270deg); 
+        opacity: 1; 
+    }
+}
+
+@keyframes progressWave {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+}
+
+/* Body lock when loading */
+body.loading-active {
+    overflow: hidden;
+}
+
+/* Enhanced button animations */
+.btn:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Card hover effects */
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+</style>
 {% endblock %}
