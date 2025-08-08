@@ -93,7 +93,7 @@
                     <!-- Statistics Cards -->
                     <div class="row mt-4">
                         <div class="col-md-3">
-                            <div class="card bg-primary bg-opacity-10">
+                            <div class="card bg-primary bg-opacity-100">
                                 <div class="card-body text-center">
                                     <i class="fas fa-users fa-2x text-primary mb-2"></i>
                                     <h5 class="card-title">{{ leaderboard | length }}</h5>
@@ -102,7 +102,7 @@
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-success bg-opacity-10">
+                            <div class="card bg-success bg-opacity-100">
                                 <div class="card-body text-center">
                                     <i class="fas fa-chart-line fa-2x text-success mb-2"></i>
                                     <h5 class="card-title">{{ (leaderboard | map(attribute='score') | sum / leaderboard | length) | round(1) if leaderboard else 0 }}</h5>
@@ -111,7 +111,7 @@
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-warning bg-opacity-10">
+                            <div class="card bg-warning bg-opacity-100">
                                 <div class="card-body text-center">
                                     <i class="fas fa-trophy fa-2x text-warning mb-2"></i>
                                     <h5 class="card-title">{{ leaderboard[0].score if leaderboard else 0 }}</h5>
@@ -120,7 +120,7 @@
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-info bg-opacity-10">
+                            <div class="card bg-info bg-opacity-100">
                                 <div class="card-body text-center">
                                     <i class="fas fa-star fa-2x text-info mb-2"></i>
                                     <h5 class="card-title">{{ (leaderboard | selectattr('score', 'ge', 90) | list | length) }}</h5>
@@ -220,7 +220,7 @@ function startAutoRefresh() {
                 
                 if (newTable && currentTable && newTable.innerHTML !== currentTable.innerHTML) {
                     // Smooth update animation
-                    currentTable.style.opacity = '0.5';
+                    currentTable.style.opacity = '1';
                     setTimeout(() => {
                         currentTable.innerHTML = newTable.innerHTML;
                         currentTable.style.opacity = '1';

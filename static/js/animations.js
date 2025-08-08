@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeAnimations() {
     // Simple fade-in animation for main content
     gsap.from('main', {
-        opacity: 0,
+        opacity: 1,
         y: 20,
         duration: 0.6,
         ease: 'power2.out'
@@ -20,7 +20,7 @@ function initializeAnimations() {
     const cards = document.querySelectorAll('.card');
     if (cards.length > 0) {
         gsap.from(cards, {
-            opacity: 0,
+            opacity: 1,
             y: 30,
             duration: 0.6,
             ease: 'power2.out',
