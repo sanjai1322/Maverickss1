@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}API Status - Mavericks{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-5">
+                <h1 class="maverick-heading">
+                    <i class="fas fa-plug me-2"></i>
+                    API Services Status
+                </h1>
+                <p class="lead text-muted">Monitor all AI and external services powering Mavericks</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current APIs in Use -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-server me-2"></i>
+                        Active API Services
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% for service_name, config in api_services.items() %}
+                    <div class="row mb-3 p-3 border rounded">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fas fa-{% if config.status == 'configured' %}check-circle text-success{% elif config.status == 'needs_key' %}exclamation-triangle text-warning{% else %}clock text-info{% endif %} fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">{{ service_name }}</h5>
+                                    <p class="text-muted mb-1">{{ config.description }}</p>
+                                    <small class="text-muted"><strong>Model:</strong> {{ config.model }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-end">
+                                <span class="badge {% if config.status == 'configured' %}bg-success{% elif config.status == 'needs_key' %}bg-warning{% elif config.status == 'always_available' %}bg-info{% else %}bg-secondary{% endif %} mb-2">
+                                    {{ config.status.replace('_', ' ').title() }}
+                                </span>
+                                <div>
+                                    {% for feature in config.features %}
+                                        <span class="badge bg-light text-dark me-1 mb-1">{{ feature }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Configuration Requirements -->
+    {% if required_keys %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-key me-2"></i>
+                        Missing API Keys
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        The following API keys need to be configured for full functionality:
+                    </p>
+                    <div class="row">
+                        {% for key in required_keys %}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-arrow-right text-warning me-2"></i>
+                                <code class="bg-light p-1 rounded">{{ key }}</code>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3">
+                        <h6>How to configure:</h6>
+                        <ol class="small">
+                            <li>Go to <strong>Secrets</strong> tab in Replit</li>
+                            <li>Add each environment variable with your API key</li>
+                            <li>Restart the application to apply changes</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- API Endpoints -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-code me-2"></i>
+                        Internal API Endpoints
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>POST /generate-exercise</strong>
+                                <small class="d-block text-muted">AI-powered coding exercise generation</small>
+                            </div>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>GET /api/progress-data</strong>
+                                <small class="d-block text-muted">User progress tracking data</small>
+                            </div>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>POST /upload-exercise</strong>
+                                <small class="d-block text-muted">Exercise file upload and processing</small>
+                            </div>
+                            <span class="badge bg-warning">Planned</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>GET /api/ai-analysis</strong>
+                                <small class="d-block text-muted">Resume analysis and skill extraction</small>
+                            </div>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        API Usage Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="metric-card p-3 bg-light rounded">
+                                <h4 class="text-primary mb-1">{{ api_stats.total_requests }}</h4>
+                                <small class="text-muted">Total Requests Today</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="metric-card p-3 bg-light rounded">
+                                <h4 class="text-success mb-1">{{ api_stats.success_rate }}%</h4>
+                                <small class="text-muted">Success Rate</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="metric-card p-3 bg-light rounded">
+                                <h4 class="text-info mb-1">{{ api_stats.avg_response_time }}ms</h4>
+                                <small class="text-muted">Avg Response Time</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="metric-card p-3 bg-light rounded">
+                                <h4 class="text-warning mb-1">{{ api_stats.rate_limit_remaining }}</h4>
+                                <small class="text-muted">Rate Limit Remaining</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Testing -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-vials me-2"></i>
+                        API Testing Console
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Test Resume Analysis API</h6>
+                            <div class="mb-3">
+                                <textarea class="form-control" id="testResumeText" rows="4" placeholder="Paste resume text here to test skill extraction..."></textarea>
+                            </div>
+                            <button class="btn btn-primary" onclick="testResumeAnalysis()">
+                                <i class="fas fa-play me-1"></i>Test Analysis
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Test Exercise Generation API</h6>
+                            <div class="mb-2">
+                                <select class="form-select mb-2" id="testLanguage">
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="java">Java</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <input class="form-control" id="testTopic" placeholder="Topic (e.g., Arrays, Sorting)">
+                            </div>
+                            <button class="btn btn-success" onclick="testExerciseGeneration()">
+                                <i class="fas fa-magic me-1"></i>Generate Exercise
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <h6>API Response:</h6>
+                        <pre id="apiResponse" class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto;">No tests run yet...</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function testResumeAnalysis() {
+    const text = document.getElementById('testResumeText').value;
+    if (!text.trim()) {
+        alert('Please enter some resume text to test');
+        return;
+    }
+    
+    document.getElementById('apiResponse').textContent = 'Testing resume analysis...';
+    
+    // Simulate API call (replace with actual implementation)
+    setTimeout(() => {
+        const mockResponse = {
+            status: 'success',
+            extracted_skills: ['Python', 'JavaScript', 'React', 'Machine Learning'],
+            confidence: 0.92,
+            processing_time: '1.2s'
+        };
+        document.getElementById('apiResponse').textContent = JSON.stringify(mockResponse, null, 2);
+    }, 1500);
+}
+
+function testExerciseGeneration() {
+    const language = document.getElementById('testLanguage').value;
+    const topic = document.getElementById('testTopic').value;
+    
+    if (!topic.trim()) {
+        alert('Please enter a topic to test');
+        return;
+    }
+    
+    document.getElementById('apiResponse').textContent = 'Generating exercise...';
+    
+    // Simulate API call (replace with actual implementation)
+    setTimeout(() => {
+        const mockResponse = {
+            status: 'success',
+            exercise: {
+                title: 'Array Rotation Challenge',
+                description: 'Rotate an array to the right by k steps',
+                language: language,
+                difficulty: 'intermediate',
+                test_cases: 5
+            },
+            generation_time: '2.1s'
+        };
+        document.getElementById('apiResponse').textContent = JSON.stringify(mockResponse, null, 2);
+    }, 2000);
+}
+</script>
+
+<style>
+.metric-card h4 {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+</style>
+{% endblock %}

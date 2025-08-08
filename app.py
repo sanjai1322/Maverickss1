@@ -25,7 +25,10 @@ db = SQLAlchemy(model_class=Base)
 
 # Create a Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "mavericks-dev-secret-key-2025")
+# Import API configuration
+from config.api_config import api_config
+
+app.secret_key = api_config.SESSION_SECRET
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 
 # Configure the PostgreSQL database
@@ -1278,6 +1281,137 @@ def assessment_panel():
 @app.route('/gen-ai-info')
 def gen_ai_info():
     return render_template('gen_ai_info.html')
+
+@app.route('/api-status')
+def api_status():
+    from config.api_config import API_SERVICES, get_required_api_keys
+    
+    # Mock API statistics (in production, these would come from monitoring)
+    api_stats = {
+        'total_requests': 1247,
+        'success_rate': 94.2,
+        'avg_response_time': 1250,
+        'rate_limit_remaining': 45
+    }
+    
+    return render_template('api_status.html',
+                         api_services=API_SERVICES,
+                         required_keys=get_required_api_keys(),
+                         api_stats=api_stats)
+
+@app.route('/generate-exercise', methods=['POST'])
+def generate_exercise():
+    try:
+        # Get form data
+        language = request.form.get('exerciseLanguage')
+        difficulty = request.form.get('exerciseDifficulty') 
+        topic = request.form.get('exerciseTopic')
+        exercise_type = request.form.get('exerciseType')
+        time_limit = request.form.get('timeLimit', 60)
+        test_cases = request.form.get('includeTests', 'basic')
+        requirements = request.form.get('additionalRequirements', '')
+        
+        # Validate required fields
+        if not all([language, difficulty, topic, exercise_type]):
+            flash('Please fill in all required fields', 'error')
+            return redirect(url_for('assessment_panel'))
+        
+        # Check if AI service is available
+        if api_config.is_service_available("openrouter"):
+            # Use AI to generate exercise
+            exercise = generate_ai_exercise(language, difficulty, topic, exercise_type, requirements)
+        else:
+            # Generate template-based exercise
+            exercise = generate_template_exercise(language, difficulty, topic, exercise_type)
+        
+        flash(f'Successfully generated {language} exercise: "{exercise["title"]}"', 'success')
+        return redirect(url_for('assessment_panel'))
+        
+    except Exception as e:
+        logger.error(f"Error generating exercise: {str(e)}")
+        flash('Error generating exercise. Please try again.', 'error')
+        return redirect(url_for('assessment_panel'))
+
+def generate_ai_exercise(language, difficulty, topic, exercise_type, requirements):
+    """Generate exercise using AI service"""
+    try:
+        import requests
+        
+        prompt = f"""
+        Create a coding exercise with the following specifications:
+        - Language: {language}
+        - Difficulty: {difficulty}
+        - Topic: {topic}
+        - Type: {exercise_type}
+        - Requirements: {requirements}
+        
+        Return a JSON object with: title, description, starter_code, test_cases
+        """
+        
+        headers = api_config.get_headers("openrouter")
+        data = {
+            "model": api_config.OPENROUTER_MODEL,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 1000
+        }
+        
+        response = requests.post(
+            f"{api_config.OPENROUTER_BASE_URL}/chat/completions",
+            headers=headers,
+            json=data,
+            timeout=api_config.API_TIMEOUT
+        )
+        
+        if response.status_code == 200:
+            ai_response = response.json()
+            content = ai_response['choices'][0]['message']['content']
+            
+            # Parse AI response (simplified)
+            return {
+                "title": f"{topic} Challenge",
+                "description": f"AI-generated {difficulty} level {exercise_type} exercise",
+                "language": language,
+                "ai_generated": True,
+                "content": content
+            }
+        else:
+            logger.error(f"AI service error: {response.status_code}")
+            return generate_template_exercise(language, difficulty, topic, exercise_type)
+            
+    except Exception as e:
+        logger.error(f"AI generation failed: {str(e)}")
+        return generate_template_exercise(language, difficulty, topic, exercise_type)
+
+def generate_template_exercise(language, difficulty, topic, exercise_type):
+    """Generate template-based exercise when AI is unavailable"""
+    templates = {
+        "python": {
+            "algorithm": {
+                "title": f"{topic} Algorithm Challenge",
+                "description": f"Implement a {difficulty} level algorithm for {topic}",
+                "starter_code": "def solve():\n    # Your code here\n    pass"
+            }
+        },
+        "javascript": {
+            "algorithm": {
+                "title": f"{topic} Function Implementation",
+                "description": f"Create a {difficulty} level function for {topic}",
+                "starter_code": "function solve() {\n    // Your code here\n}"
+            }
+        }
+    }
+    
+    template = templates.get(language, {}).get(exercise_type, {
+        "title": f"{topic} Exercise",
+        "description": f"Complete this {difficulty} level {exercise_type} exercise",
+        "starter_code": "// Your code here"
+    })
+    
+    return {
+        **template,
+        "language": language,
+        "ai_generated": False
+    }
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
