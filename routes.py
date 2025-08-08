@@ -478,7 +478,7 @@ def assessment_panel():
         }
     ]
     
-    return render_template('assessment_panel_simple.html', username=username, ai_exercises=ai_exercises)
+    return render_template('assessment_panel_improved.html', username=username, ai_exercises=ai_exercises)
 
 @app.route('/learning_path')
 @app.route('/learning_path/<username>')

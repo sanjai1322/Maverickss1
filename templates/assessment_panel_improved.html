@@ -1,0 +1,566 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment Panel - Mavericks{% endblock %}
+
+{% block content %}
+<style>
+    .maverick-heading {
+        color: #00d4ff;
+        text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+    }
+    
+    .card {
+        background-color: #2a2d3a;
+        border: 1px solid #3a3d4a;
+    }
+    
+    .card-header {
+        background-color: #3a3d4a;
+        border-bottom: 1px solid #4a4d5a;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #0056b3, #003d82);
+        transform: translateY(-2px);
+    }
+    
+    .modal-content {
+        background-color: #2a2d3a;
+        border: 1px solid #3a3d4a;
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid #3a3d4a;
+    }
+    
+    .modal-footer {
+        border-top: 1px solid #3a3d4a;
+    }
+    
+    .form-select, .form-control {
+        background-color: #1a1d29;
+        border: 1px solid #3a3d4a;
+        color: #ffffff;
+    }
+    
+    .form-select:focus, .form-control:focus {
+        background-color: #1a1d29;
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+        color: #ffffff;
+    }
+    
+    .form-select option {
+        background-color: #1a1d29;
+        color: #ffffff;
+    }
+    
+    .btn-close {
+        filter: invert(1);
+    }
+    
+    /* Loading Animation Styles */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+    }
+
+    .loading-container {
+        text-align: center;
+        color: white;
+    }
+
+    .loading-animation {
+        animation: bounce 2s infinite;
+    }
+
+    .robot-head {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        border-radius: 20px;
+        margin: 0 auto 30px;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0, 123, 255, 0.3);
+        animation: robotHead 3s infinite ease-in-out;
+    }
+
+    .robot-eyes {
+        position: absolute;
+        top: 25px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 20px;
+    }
+
+    .eye {
+        width: 15px;
+        height: 15px;
+        background: #fff;
+        border-radius: 50%;
+        animation: blink 3s infinite;
+    }
+
+    .robot-mouth {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 30px;
+        height: 15px;
+        border: 3px solid #fff;
+        border-top: none;
+        border-radius: 0 0 15px 15px;
+        animation: talk 1s infinite alternate;
+    }
+
+    .loading-text {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 30px;
+        transition: opacity 0.3s ease;
+    }
+
+    .code-particles {
+        height: 60px;
+        position: relative;
+        margin-bottom: 30px;
+    }
+
+    .particle {
+        position: absolute;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        color: #00ff88;
+        animation: float 3s infinite ease-in-out;
+        opacity: 0.8;
+    }
+
+    .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+    .particle:nth-child(2) { left: 20%; animation-delay: 0.5s; }
+    .particle:nth-child(3) { left: 35%; animation-delay: 1s; }
+    .particle:nth-child(4) { left: 50%; animation-delay: 1.5s; }
+    .particle:nth-child(5) { left: 65%; animation-delay: 2s; }
+    .particle:nth-child(6) { left: 75%; animation-delay: 2.5s; }
+    .particle:nth-child(7) { left: 85%; animation-delay: 3s; }
+    .particle:nth-child(8) { left: 90%; animation-delay: 3.5s; }
+
+    .progress-bar {
+        width: 300px;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #007bff, #00ff88, #007bff);
+        background-size: 200% 100%;
+        border-radius: 4px;
+        animation: progressWave 2s infinite linear;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+
+    @keyframes robotHead {
+        0%, 100% { transform: rotate(-5deg) scale(1); }
+        50% { transform: rotate(5deg) scale(1.05); }
+    }
+
+    @keyframes blink {
+        0%, 90%, 100% { transform: scaleY(1); }
+        95% { transform: scaleY(0.1); }
+    }
+
+    @keyframes talk {
+        0% { height: 15px; }
+        100% { height: 8px; }
+    }
+
+    @keyframes float {
+        0%, 100% { 
+            transform: translateY(0) rotate(0deg); 
+            opacity: 0.8; 
+        }
+        25% { 
+            transform: translateY(-15px) rotate(90deg); 
+            opacity: 1; 
+        }
+        50% { 
+            transform: translateY(-30px) rotate(180deg); 
+            opacity: 0.6; 
+        }
+        75% { 
+            transform: translateY(-15px) rotate(270deg); 
+            opacity: 1; 
+        }
+    }
+
+    @keyframes progressWave {
+        0% { background-position: 0% 0%; }
+        100% { background-position: 200% 0%; }
+    }
+
+    body.loading-active {
+        overflow: hidden;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+    }
+
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="maverick-heading">
+                    <i class="fas fa-code me-2"></i>
+                    Assessment Panel
+                </h1>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generateExerciseModal">
+                    <i class="fas fa-magic me-1"></i>
+                    Generate Exercise
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Generation Results -->
+    <div class="row" id="exercisesContainer">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tasks me-2"></i>
+                        Generated Exercises
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="exercisesList" class="row">
+                        <div class="col-12 text-center text-muted py-4">
+                            <i class="fas fa-code fa-3x mb-3 opacity-50"></i>
+                            <p>No exercises generated yet. Click "Generate Exercise" to create coding challenges.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="statusMessages" class="mt-3"></div>
+
+    <!-- Playful Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay d-none">
+        <div class="loading-container">
+            <div class="loading-animation">
+                <div class="robot-head">
+                    <div class="robot-eyes">
+                        <div class="eye left-eye"></div>
+                        <div class="eye right-eye"></div>
+                    </div>
+                    <div class="robot-mouth"></div>
+                </div>
+                <div class="loading-text">
+                    <span id="loadingMessage">Generating your coding challenge...</span>
+                </div>
+                <div class="code-particles">
+                    <span class="particle">{</span>
+                    <span class="particle">}</span>
+                    <span class="particle">&lt;/&gt;</span>
+                    <span class="particle">( )</span>
+                    <span class="particle">[ ]</span>
+                    <span class="particle">def</span>
+                    <span class="particle">var</span>
+                    <span class="particle">if</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generate Exercise Modal -->
+<div class="modal fade" id="generateExerciseModal" tabindex="-1" aria-labelledby="generateExerciseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="generateExerciseModalLabel">
+                    <i class="fas fa-magic me-2"></i>
+                    Generate AI Coding Exercise
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="generateExerciseForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="skill" class="form-label">Programming Language</label>
+                            <select class="form-select" id="skill" name="skill" required>
+                                <option value="">Select Language</option>
+                                <option value="python">Python</option>
+                                <option value="javascript">JavaScript</option>
+                                <option value="java">Java</option>
+                                <option value="cpp">C++</option>
+                                <option value="csharp">C#</option>
+                                <option value="go">Go</option>
+                                <option value="rust">Rust</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="difficulty" class="form-label">Difficulty Level</label>
+                            <select class="form-select" id="difficulty" name="difficulty" required>
+                                <option value="">Select Difficulty</option>
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                                <option value="expert">Expert</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="topic" class="form-label">Topic/Concept (Optional)</label>
+                        <input type="text" class="form-control" id="topic" name="topic" placeholder="e.g., Arrays, Algorithms, Data Structures">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="generateBtn">
+                    <i class="fas fa-magic me-1"></i>
+                    Generate Exercise
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('generateExerciseForm');
+    const generateBtn = document.getElementById('generateBtn');
+    const modal = new bootstrap.Modal(document.getElementById('generateExerciseModal'));
+
+    // Ensure form elements are interactive
+    const skillSelect = document.getElementById('skill');
+    const difficultySelect = document.getElementById('difficulty');
+    const topicInput = document.getElementById('topic');
+
+    generateBtn.addEventListener('click', function() {
+        const skill = skillSelect.value;
+        const difficulty = difficultySelect.value;
+        const topic = topicInput.value;
+        
+        if (!skill || !difficulty) {
+            showMessage('Please select both programming language and difficulty level.', 'warning');
+            return;
+        }
+
+        // Show playful loading animation
+        showLoadingAnimation();
+        
+        const originalText = generateBtn.innerHTML;
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<i class="fas fa-magic fa-spin me-1"></i>Generating...';
+
+        // Make real API call to our backend
+        const formData = new FormData();
+        formData.append('skill', skill);
+        formData.append('difficulty', difficulty);
+        if (topic) formData.append('topic', topic);
+
+        fetch('/generate_exercise', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addExerciseToList(data.exercise);
+                form.reset();
+                modal.hide();
+                showMessage('Exercise generated successfully!', 'success');
+            } else {
+                showMessage('Error: ' + (data.error || 'Failed to generate exercise'), 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error generating exercise. Please try again.', 'danger');
+        })
+        .finally(() => {
+            hideLoadingAnimation();
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = originalText;
+        });
+    });
+
+    function addExerciseToList(exercise) {
+        const exercisesList = document.getElementById('exercisesList');
+        
+        // Clear empty state if present
+        if (exercisesList.querySelector('.text-muted')) {
+            exercisesList.innerHTML = '';
+        }
+
+        const exerciseCard = document.createElement('div');
+        exerciseCard.className = 'col-lg-6 mb-4';
+        exerciseCard.innerHTML = `
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">${exercise.title}</h6>
+                        <span class="badge bg-light text-dark">${exercise.difficulty}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">${exercise.description}</p>
+                    <div class="mb-2">
+                        <small class="text-muted">
+                            <i class="fas fa-code me-1"></i>${exercise.skill}
+                            <i class="fas fa-clock me-1 ms-3"></i>${exercise.estimated_time}
+                            <i class="fas fa-star me-1 ms-3"></i>${exercise.points} points
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Starter Code:</strong>
+                        <pre class="bg-dark text-light p-2 rounded mt-1" style="font-size: 0.85em; white-space: pre-wrap;">${exercise.starter_code}</pre>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Test Cases:</strong>
+                        <ul class="list-unstyled mt-1">
+                            ${exercise.test_cases.map(test => `<li class="small text-muted">• ${test}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-success" onclick="startExercise('${exercise.title}')">
+                            <i class="fas fa-play"></i> Start Now
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="copyCode(\`${exercise.starter_code.replace(/`/g, '\\`')}\`)">
+                            <i class="fas fa-copy"></i> Copy Code
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        exercisesList.appendChild(exerciseCard);
+    }
+
+    function showMessage(message, type) {
+        const statusMessages = document.getElementById('statusMessages');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        statusMessages.appendChild(alert);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 5000);
+    }
+
+    // Make showMessage globally available
+    window.showMessage = showMessage;
+});
+
+function startExercise(title) {
+    showMessage(`Starting exercise: ${title}. This would typically open a coding environment.`, 'info');
+}
+
+function copyCode(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        showMessage('Starter code copied to clipboard!', 'success');
+    }).catch(() => {
+        showMessage('Failed to copy code. Please copy manually.', 'warning');
+    });
+}
+
+let loadingMessages = [
+    "🤖 AI is thinking hard...",
+    "⚡ Generating brilliant code challenges...",
+    "🎯 Crafting the perfect exercise...",
+    "💡 Cooking up some coding magic...",
+    "🚀 Building your next challenge...",
+    "🔥 Creating an awesome problem...",
+    "⭐ Designing your coding adventure...",
+    "🎮 Preparing an epic challenge..."
+];
+let messageIndex = 0;
+
+function showLoadingAnimation() {
+    const overlay = document.getElementById('loadingOverlay');
+    const messageEl = document.getElementById('loadingMessage');
+    
+    overlay.classList.remove('d-none');
+    document.body.classList.add('loading-active');
+    
+    // Cycle through loading messages
+    messageIndex = 0;
+    updateLoadingMessage();
+    
+    window.loadingInterval = setInterval(updateLoadingMessage, 2000);
+}
+
+function hideLoadingAnimation() {
+    const overlay = document.getElementById('loadingOverlay');
+    
+    overlay.classList.add('d-none');
+    document.body.classList.remove('loading-active');
+    
+    if (window.loadingInterval) {
+        clearInterval(window.loadingInterval);
+    }
+}
+
+function updateLoadingMessage() {
+    const messageEl = document.getElementById('loadingMessage');
+    messageEl.style.opacity = '0';
+    
+    setTimeout(() => {
+        messageEl.textContent = loadingMessages[messageIndex];
+        messageEl.style.opacity = '1';
+        messageIndex = (messageIndex + 1) % loadingMessages.length;
+    }, 300);
+}
+</script>
+{% endblock %}
