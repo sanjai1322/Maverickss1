@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     showGeneratedExercise(data.exercise);
                     // Close modal
                     const modal = bootstrap.Modal.getInstance(document.getElementById('generateExerciseModal'));
-                    modal.hide();
+                    if (modal) modal.hide();
                     // Reset form
                     form.reset();
                 } else {

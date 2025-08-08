@@ -814,9 +814,18 @@ def generate_exercise():
             }
         }
         
+        # Map difficulty levels for compatibility
+        difficulty_map = {
+            'beginner': 'easy',
+            'intermediate': 'medium', 
+            'advanced': 'hard',
+            'expert': 'hard'
+        }
+        mapped_difficulty = difficulty_map.get(difficulty.lower(), difficulty.lower())
+        
         # Get exercise based on skill and difficulty
         skill_exercises = exercises.get(skill.lower(), exercises['python'])
-        exercise_data = skill_exercises.get(difficulty.lower(), skill_exercises['medium'])
+        exercise_data = skill_exercises.get(mapped_difficulty, skill_exercises['medium'])
         
         return jsonify({
             'success': True,
