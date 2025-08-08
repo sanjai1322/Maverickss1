@@ -488,7 +488,36 @@ def assessment_panel():
     if not username:
         flash('Please create a profile first.', 'warning')
         return redirect(url_for('profile'))
-    return render_template('assessment_panel.html', username=username)
+    
+    # Sample AI exercises for the assessment panel
+    ai_exercises = [
+        {
+            'id': 1,
+            'title': 'Array Maximum Finder',
+            'description': 'Create a function that finds the maximum element in an array',
+            'difficulty': 'Easy',
+            'language': 'Python',
+            'estimated_time': 15
+        },
+        {
+            'id': 2,
+            'title': 'String Reverser',
+            'description': 'Write a function that reverses a string without using built-in methods',
+            'difficulty': 'Medium',
+            'language': 'JavaScript',
+            'estimated_time': 20
+        },
+        {
+            'id': 3,
+            'title': 'Database Query Optimization',
+            'description': 'Optimize a slow SQL query for better performance',
+            'difficulty': 'Hard',
+            'language': 'SQL',
+            'estimated_time': 30
+        }
+    ]
+    
+    return render_template('assessment_panel.html', username=username, ai_exercises=ai_exercises)
 
 @app.route('/learning_path')
 @app.route('/learning_path/<username>')
@@ -674,21 +703,237 @@ def update_learning_path():
 def generate_exercise():
     """Generate a coding exercise."""
     username = session.get('username')
-    skill = request.form.get('skill', 'Python')
     
-    # Simple fallback exercise generation
-    exercises = {
-        'python': 'Create a function that finds the maximum element in a list',
-        'javascript': 'Write a function that reverses a string',
-        'sql': 'Write a query to find the top 5 customers by total orders',
-        'default': 'Solve a coding problem relevant to your skill level'
-    }
+    try:
+        # Get form data
+        skill = request.form.get('skill', 'Python')
+        difficulty = request.form.get('difficulty', 'Medium')
+        
+        # Enhanced exercise generation based on skill and difficulty
+        exercises = {
+            'python': {
+                'easy': {
+                    'title': 'List Sum Calculator',
+                    'description': 'Write a function that calculates the sum of all numbers in a list',
+                    'starter_code': 'def calculate_sum(numbers):\n    # Your code here\n    pass',
+                    'test_cases': ['calculate_sum([1, 2, 3, 4]) == 10', 'calculate_sum([]) == 0']
+                },
+                'medium': {
+                    'title': 'Palindrome Checker',
+                    'description': 'Create a function that checks if a string is a palindrome (reads the same forwards and backwards)',
+                    'starter_code': 'def is_palindrome(text):\n    # Your code here\n    pass',
+                    'test_cases': ['is_palindrome("racecar") == True', 'is_palindrome("hello") == False']
+                },
+                'hard': {
+                    'title': 'Binary Tree Traversal',
+                    'description': 'Implement in-order traversal for a binary tree',
+                    'starter_code': 'class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef inorder_traversal(root):\n    # Your code here\n    pass',
+                    'test_cases': ['Test with sample binary tree']
+                }
+            },
+            'javascript': {
+                'easy': {
+                    'title': 'Array Filter',
+                    'description': 'Create a function that filters even numbers from an array',
+                    'starter_code': 'function filterEvenNumbers(arr) {\n    // Your code here\n}',
+                    'test_cases': ['filterEvenNumbers([1,2,3,4,5,6]) should return [2,4,6]']
+                },
+                'medium': {
+                    'title': 'Object Property Counter',
+                    'description': 'Write a function that counts specific properties in an array of objects',
+                    'starter_code': 'function countProperties(objects, property) {\n    // Your code here\n}',
+                    'test_cases': ['Count objects with specific property values']
+                },
+                'hard': {
+                    'title': 'Promise Chain Handler',
+                    'description': 'Create a function that handles multiple promises with error handling',
+                    'starter_code': 'async function handlePromises(promises) {\n    // Your code here\n}',
+                    'test_cases': ['Handle array of promises with proper error handling']
+                }
+            },
+            'sql': {
+                'easy': {
+                    'title': 'Basic SELECT Query',
+                    'description': 'Write a query to select all customers from a specific city',
+                    'starter_code': 'SELECT * FROM customers WHERE city = ?',
+                    'test_cases': ['Select customers from "New York"']
+                },
+                'medium': {
+                    'title': 'JOIN and Aggregation',
+                    'description': 'Write a query to find top 5 customers by total order value',
+                    'starter_code': 'SELECT c.customer_name, SUM(o.total) as total_orders\nFROM customers c\nJOIN orders o ON c.id = o.customer_id\n-- Complete the query',
+                    'test_cases': ['Group by customer and sort by total orders']
+                },
+                'hard': {
+                    'title': 'Complex Subquery',
+                    'description': 'Find customers who have ordered more than the average order value',
+                    'starter_code': '-- Write a complex query with subqueries',
+                    'test_cases': ['Use subqueries to compare with average values']
+                }
+            }
+        }
+        
+        # Get exercise based on skill and difficulty
+        skill_exercises = exercises.get(skill.lower(), exercises['python'])
+        exercise_data = skill_exercises.get(difficulty.lower(), skill_exercises['medium'])
+        
+        return jsonify({
+            'success': True,
+            'exercise': {
+                'title': exercise_data['title'],
+                'description': exercise_data['description'],
+                'starter_code': exercise_data['starter_code'],
+                'test_cases': exercise_data['test_cases'],
+                'skill': skill,
+                'difficulty': difficulty,
+                'estimated_time': '30 minutes',
+                'points': {'easy': 10, 'medium': 20, 'hard': 30}[difficulty.lower()]
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error generating exercise: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to generate exercise. Please try again.'
+        }), 500
+
+# API endpoint for submitting exercise solutions
+@app.route('/submit_exercise', methods=['POST'])
+def submit_exercise():
+    """Submit and evaluate exercise solution."""
+    username = session.get('username')
+    if not username:
+        return jsonify({'error': 'Please login first'}), 401
     
-    exercise = exercises.get(skill.lower(), exercises['default'])
-    
-    return jsonify({
-        'exercise': exercise,
-        'skill': skill,
-        'difficulty': 'Medium',
-        'time_limit': '30 minutes'
-    })
+    try:
+        data = request.get_json()
+        exercise_id = data.get('exercise_id')
+        solution_code = data.get('solution_code')
+        skill = data.get('skill', 'Python')
+        
+        # Simple solution evaluation (in production, you'd use proper code execution sandboxing)
+        score = 0
+        feedback = []
+        
+        # Basic checks for solution quality
+        if solution_code and len(solution_code.strip()) > 10:
+            score += 30  # Basic implementation bonus
+            feedback.append("Good: Solution is implemented")
+            
+            # Check for common programming patterns
+            if 'def ' in solution_code or 'function ' in solution_code:
+                score += 20
+                feedback.append("Good: Proper function definition")
+            
+            if 'return ' in solution_code:
+                score += 20
+                feedback.append("Good: Function returns a value")
+            
+            # Check for edge case handling
+            if any(keyword in solution_code.lower() for keyword in ['if', 'else', 'try', 'except']):
+                score += 15
+                feedback.append("Excellent: Includes conditional logic or error handling")
+            
+            # Check for efficient patterns
+            if any(keyword in solution_code.lower() for keyword in ['for', 'while', 'map', 'filter']):
+                score += 15
+                feedback.append("Good: Uses iteration or functional programming")
+        
+        else:
+            feedback.append("Missing: Please provide a complete solution")
+        
+        # Cap the score at 100
+        score = min(score, 100)
+        
+        # Save submission to database (simplified)
+        try:
+            from models import User
+            user = User.query.filter_by(username=username).first()
+            if user:
+                # Update user's exercise completion stats
+                current_scores = json.loads(user.scores) if user.scores else {}
+                if 'exercises' not in current_scores:
+                    current_scores['exercises'] = []
+                
+                current_scores['exercises'].append({
+                    'exercise_id': exercise_id,
+                    'skill': skill,
+                    'score': score,
+                    'submitted_at': datetime.utcnow().isoformat(),
+                    'solution_length': len(solution_code)
+                })
+                
+                user.scores = json.dumps(current_scores)
+                db.session.commit()
+                
+        except Exception as db_error:
+            logger.error(f"Error saving exercise submission: {str(db_error)}")
+        
+        return jsonify({
+            'success': True,
+            'score': score,
+            'feedback': feedback,
+            'max_score': 100,
+            'percentage': score,
+            'message': f'Great work! You scored {score}/100 on this exercise.'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error submitting exercise: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to submit exercise. Please try again.'
+        }), 500
+
+# API endpoint for getting exercise hints
+@app.route('/get_exercise_hint', methods=['POST'])
+def get_exercise_hint():
+    """Get hints for an exercise."""
+    try:
+        data = request.get_json()
+        exercise_type = data.get('exercise_type', 'general')
+        difficulty = data.get('difficulty', 'medium')
+        
+        hints = {
+            'array_operations': [
+                "Start by iterating through the array",
+                "Consider using built-in array methods like map() or filter()",
+                "Don't forget to handle edge cases like empty arrays"
+            ],
+            'string_manipulation': [
+                "Think about string methods like split(), join(), or slice()",
+                "Consider character-by-character processing",
+                "Remember to handle special characters and spaces"
+            ],
+            'algorithm_design': [
+                "Break the problem into smaller sub-problems",
+                "Consider the time and space complexity",
+                "Test with simple examples first"
+            ],
+            'database_queries': [
+                "Start with the basic SELECT structure",
+                "Use JOIN clauses to connect related tables",
+                "Don't forget GROUP BY for aggregations"
+            ],
+            'general': [
+                "Read the problem statement carefully",
+                "Start with a simple approach, then optimize",
+                "Test your solution with different inputs"
+            ]
+        }
+        
+        exercise_hints = hints.get(exercise_type, hints['general'])
+        
+        return jsonify({
+            'success': True,
+            'hints': exercise_hints,
+            'hint_count': len(exercise_hints)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting exercise hint: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to get hints. Please try again.'
+        }), 500
