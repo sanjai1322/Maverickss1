@@ -54,11 +54,13 @@ Branding: "Mavericks" with rocket theme and blue gradient color scheme.
 - **Profile Creation**: Users submit username and resume text for AI analysis
 - **Skill Extraction**: AI models process resume content to identify technical skills
 - **Assessment**: Multi-question technical evaluation with open-ended responses
+- **Assessment Panel**: AI-powered coding exercise generation with upload/connect capabilities
 - **AI Course Generation**: Personalized learning paths created based on resume analysis
 - **Real-time Progress Tracking**: Monitor learning activities and course completion with detailed timestamps
 - **Progress Dashboard**: Enhanced timeline showing each step completion with hover details
 - **Manual Overrides**: User-accessible buttons for Re-assess, Update Profile, and Request Review
 - **Admin Management**: Complete admin dashboard for user oversight and analytics
+- **Gen AI Documentation**: Comprehensive overview of all AI technologies and models used
 - **Data Persistence**: All user data and results stored in PostgreSQL for session continuity
 
 # External Dependencies

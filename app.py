@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename
 import PyPDF2
 from docx import Document
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timedelta
 from ai_course_generator import CourseGenerator
 
 # Set up logging to see what's happening
@@ -1197,6 +1197,87 @@ def request_review():
         flash('Error submitting review request. Please try again.', 'error')
     
     return redirect(url_for('progress'))
+
+@app.route('/assessment-panel')
+def assessment_panel():
+    # Sample AI-generated exercises (in production, these would come from database)
+    ai_exercises = [
+        {
+            'id': 1,
+            'title': 'Binary Tree Traversal',
+            'description': 'Implement in-order, pre-order, and post-order traversal for a binary tree.',
+            'language': 'Python',
+            'difficulty': 'Intermediate',
+            'estimated_time': 45
+        },
+        {
+            'id': 2,
+            'title': 'REST API Design',
+            'description': 'Design and implement a RESTful API for a user management system.',
+            'language': 'JavaScript',
+            'difficulty': 'Advanced',
+            'estimated_time': 90
+        },
+        {
+            'id': 3,
+            'title': 'Sorting Algorithm',
+            'description': 'Implement and analyze the time complexity of merge sort algorithm.',
+            'language': 'Java',
+            'difficulty': 'Beginner',
+            'estimated_time': 30
+        },
+        {
+            'id': 4,
+            'title': 'Database Optimization',
+            'description': 'Optimize SQL queries for better performance on large datasets.',
+            'language': 'SQL',
+            'difficulty': 'Expert',
+            'estimated_time': 60
+        }
+    ]
+    
+    # Sample upcoming assessments
+    upcoming_assessments = [
+        {
+            'id': 1,
+            'title': 'Full Stack Developer Assessment',
+            'scheduled_date': datetime.now() + timedelta(days=3),
+            'participants': 25,
+            'status': 'Scheduled'
+        },
+        {
+            'id': 2,
+            'title': 'Data Science Challenge',
+            'scheduled_date': datetime.now() + timedelta(days=7),
+            'participants': 18,
+            'status': 'Draft'
+        }
+    ]
+    
+    # Sample past assessments
+    past_assessments = [
+        {
+            'id': 1,
+            'title': 'Python Developer Test',
+            'completed_date': datetime.now() - timedelta(days=5),
+            'avg_score': 78.5
+        },
+        {
+            'id': 2,
+            'title': 'Frontend React Challenge',
+            'completed_date': datetime.now() - timedelta(days=12),
+            'avg_score': 82.3
+        }
+    ]
+    
+    return render_template('assessment_panel.html',
+                         ai_exercises=ai_exercises,
+                         upcoming_assessments=upcoming_assessments,
+                         past_assessments=past_assessments)
+
+@app.route('/gen-ai-info')
+def gen_ai_info():
+    return render_template('gen_ai_info.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

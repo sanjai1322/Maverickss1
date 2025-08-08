@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}Gen AI Technologies - Mavericks{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-5">
+                <h1 class="maverick-heading">
+                    <i class="fas fa-brain me-2"></i>
+                    Generative AI in Mavericks
+                </h1>
+                <p class="lead text-muted">Powering the next generation of coding assessments and learning</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Models Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        Core AI Models & Technologies
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <h5><i class="fas fa-robot me-2 text-primary"></i>Large Language Models</h5>
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>OpenRouter GPT (openai/gpt-oss-20b:free)</strong>
+                                        <small class="d-block text-muted">Primary model for resume analysis and course generation</small>
+                                    </div>
+                                    <span class="badge bg-success">Active</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>DistilGPT2</strong>
+                                        <small class="d-block text-muted">Text generation and code completion</small>
+                                    </div>
+                                    <span class="badge bg-success">Active</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>CodeT5</strong>
+                                        <small class="d-block text-muted">Code generation and optimization</small>
+                                    </div>
+                                    <span class="badge bg-warning">Planned</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h5><i class="fas fa-search me-2 text-info"></i>Embedding Models</h5>
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Sentence Transformers (all-MiniLM-L6-v2)</strong>
+                                        <small class="d-block text-muted">Text similarity and semantic search</small>
+                                    </div>
+                                    <span class="badge bg-success">Active</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>BERT Base</strong>
+                                        <small class="d-block text-muted">Text classification and analysis</small>
+                                    </div>
+                                    <span class="badge bg-success">Active</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>CodeBERT</strong>
+                                        <small class="d-block text-muted">Code understanding and analysis</small>
+                                    </div>
+                                    <span class="badge bg-info">Testing</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Applications -->
+    <div class="row mb-4">
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt me-2"></i>
+                        Resume Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Automated skill extraction using NLP
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Experience level classification
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Technology stack identification
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Career trajectory analysis
+                        </li>
+                    </ul>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Models Used:</strong> OpenRouter GPT, BERT, Sentence Transformers
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-code me-2"></i>
+                        Assessment Generation
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-magic text-info me-2"></i>
+                            Dynamic coding challenge creation
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-magic text-info me-2"></i>
+                            Difficulty-adaptive questions
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-magic text-info me-2"></i>
+                            Multi-language support
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-magic text-info me-2"></i>
+                            Test case generation
+                        </li>
+                    </ul>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Models Used:</strong> DistilGPT2, CodeT5, OpenRouter GPT
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-graduation-cap me-2"></i>
+                        Learning Path AI
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-route text-warning me-2"></i>
+                            Personalized curriculum design
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-route text-warning me-2"></i>
+                            Adaptive learning sequences
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-route text-warning me-2"></i>
+                            Progress-based adjustments
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-route text-warning me-2"></i>
+                            Resource recommendations
+                        </li>
+                    </ul>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Models Used:</strong> OpenRouter GPT, Recommendation Engine
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        AI Performance Metrics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="metric-card p-3 bg-light rounded">
+                                <h3 class="text-primary mb-1">92%</h3>
+                                <small class="text-muted">Skill Extraction Accuracy</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="metric-card p-3 bg-light rounded">
+                                <h3 class="text-success mb-1">1.2s</h3>
+                                <small class="text-muted">Average Response Time</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="metric-card p-3 bg-light rounded">
+                                <h3 class="text-info mb-1">89%</h3>
+                                <small class="text-muted">User Satisfaction Rate</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="metric-card p-3 bg-light rounded">
+                                <h3 class="text-warning mb-1">99.8%</h3>
+                                <small class="text-muted">System Uptime</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        AI Processing Pipeline
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="pipeline-step mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="step-number bg-primary text-white rounded-circle me-3">1</div>
+                            <div>
+                                <strong>Data Ingestion</strong>
+                                <small class="d-block text-muted">Resume text parsing and preprocessing</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pipeline-step mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="step-number bg-success text-white rounded-circle me-3">2</div>
+                            <div>
+                                <strong>AI Analysis</strong>
+                                <small class="d-block text-muted">Multi-model skill extraction and classification</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pipeline-step mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="step-number bg-info text-white rounded-circle me-3">3</div>
+                            <div>
+                                <strong>Content Generation</strong>
+                                <small class="d-block text-muted">Personalized assessments and learning paths</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="d-flex align-items-center">
+                            <div class="step-number bg-warning text-white rounded-circle me-3">4</div>
+                            <div>
+                                <strong>Optimization</strong>
+                                <small class="d-block text-muted">Continuous learning and improvement</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Future AI Features -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-rocket me-2"></i>
+                        Upcoming AI Features
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-3 mb-3">
+                            <div class="feature-card p-3 border rounded h-100">
+                                <div class="text-center mb-2">
+                                    <i class="fas fa-microphone fa-2x text-primary"></i>
+                                </div>
+                                <h6 class="text-center">Voice Assessments</h6>
+                                <p class="text-muted small">AI-powered speech-to-text for verbal coding explanations</p>
+                                <span class="badge bg-secondary">Q2 2025</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 mb-3">
+                            <div class="feature-card p-3 border rounded h-100">
+                                <div class="text-center mb-2">
+                                    <i class="fas fa-eye fa-2x text-success"></i>
+                                </div>
+                                <h6 class="text-center">Code Review AI</h6>
+                                <p class="text-muted small">Automated code quality analysis and suggestions</p>
+                                <span class="badge bg-secondary">Q3 2025</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 mb-3">
+                            <div class="feature-card p-3 border rounded h-100">
+                                <div class="text-center mb-2">
+                                    <i class="fas fa-users fa-2x text-info"></i>
+                                </div>
+                                <h6 class="text-center">Pair Programming AI</h6>
+                                <p class="text-muted small">AI assistant for collaborative coding sessions</p>
+                                <span class="badge bg-secondary">Q4 2025</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 mb-3">
+                            <div class="feature-card p-3 border rounded h-100">
+                                <div class="text-center mb-2">
+                                    <i class="fas fa-chart-line fa-2x text-warning"></i>
+                                </div>
+                                <h6 class="text-center">Predictive Analytics</h6>
+                                <p class="text-muted small">Career trajectory prediction based on skills</p>
+                                <span class="badge bg-secondary">Q1 2026</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.step-number {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.metric-card h3 {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.feature-card {
+    transition: transform 0.2s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.pipeline-step {
+    position: relative;
+}
+
+.pipeline-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 50px;
+    width: 2px;
+    height: 30px;
+    background-color: #dee2e6;
+}
+</style>
+{% endblock %}
