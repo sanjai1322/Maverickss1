@@ -2,6 +2,10 @@
 
 {% block title %}Assessment Panel - Mavericks{% endblock %}
 
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/assessment-timer.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row">
@@ -89,6 +93,137 @@
         </div>
     </div>
 
+    <!-- Skill-Based Assessment Quiz -->
+    {% if assessment_questions %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-brain me-2"></i>
+                            Personalized Assessment Quiz
+                        </h5>
+                        <div id="timer-display" class="badge bg-primary fs-6">
+                            <i class="fas fa-clock me-1"></i>
+                            <span id="timer-text">Ready to start</span>
+                        </div>
+                    </div>
+                    <small class="text-muted">Questions tailored to your skills: {{ user.skills }}</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('assessment_panel') }}" id="assessment-form">
+                        <div id="assessment-questions">
+                            {% for question in assessment_questions %}
+                            <div class="assessment-question mb-4 p-3 border rounded" data-question-id="{{ question.id }}" data-time-limit="{{ question.time_limit }}" data-points="{{ question.points }}">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h6 class="mb-0">
+                                        <span class="badge bg-info me-2">{{ question.skill }}</span>
+                                        Question {{ loop.index }}
+                                    </h6>
+                                    <div class="text-end">
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>{{ question.time_limit }}s
+                                            <i class="fas fa-star me-1 ms-2"></i>{{ question.points }} pts
+                                        </small>
+                                    </div>
+                                </div>
+                                <p class="mb-3">{{ question.question }}</p>
+                                <textarea class="form-control" name="{{ question.id }}" rows="4" 
+                                         placeholder="Type your detailed answer here..." 
+                                         data-word-count data-min-words="10"></textarea>
+                                <div class="question-timer mt-2" id="timer-{{ question.id }}" style="display: none;">
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                                    </div>
+                                    <small class="text-muted">Time remaining: <span class="time-remaining">{{ question.time_limit }}s</span></small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                            <button type="button" id="start-assessment" class="btn btn-success btn-lg me-md-2">
+                                <i class="fas fa-play me-1"></i>
+                                Start Timed Assessment
+                            </button>
+                            <button type="submit" id="submit-assessment" class="btn btn-primary btn-lg" style="display: none;">
+                                <i class="fas fa-check me-1"></i>
+                                Submit Assessment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Assessment Instructions -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Assessment Instructions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Each question has an individual timer
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Questions are based on your resume skills
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Provide detailed technical explanations
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Use relevant technical terminology
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Include examples where applicable
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trophy me-2"></i>
+                        Scoring System
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if assessment_questions %}
+                        {% set total_points = assessment_questions | sum(attribute='points') %}
+                        <div class="mb-3">
+                            <strong>Total Possible Points: {{ total_points }}</strong>
+                        </div>
+                        {% for question in assessment_questions %}
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>{{ question.skill }}</span>
+                            <span class="badge bg-primary">{{ question.points }} pts</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Complete your profile to see personalized scoring.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Upcoming Assessments -->
     <div class="row mb-4">
         <div class="col-lg-6">
@@ -96,34 +231,17 @@
                 <div class="card-header">
                     <h5 class="mb-0">
                         <i class="fas fa-calendar-plus me-2"></i>
-                        Upcoming Assessments
+                        Assessment History
                     </h5>
                 </div>
                 <div class="card-body">
-                    {% if upcoming_assessments %}
-                        {% for assessment in upcoming_assessments %}
-                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
-                            <div>
-                                <h6 class="mb-1">{{ assessment.title }}</h6>
-                                <small class="text-muted">
-                                    <i class="fas fa-calendar me-1"></i>{{ assessment.scheduled_date.strftime('%m/%d/%Y %H:%M') }}
-                                    <i class="fas fa-users me-1 ms-3"></i>{{ assessment.participants }} participants
-                                </small>
-                            </div>
-                            <div>
-                                <span class="badge bg-warning">{{ assessment.status }}</span>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-calendar-times fa-3x mb-3 opacity-50"></i>
-                            <p>No upcoming assessments scheduled.</p>
-                            <button class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-plus"></i> Schedule Assessment
-                            </button>
-                        </div>
-                    {% endif %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-history fa-3x mb-3 opacity-50"></i>
+                        <p>Your assessment results will appear here.</p>
+                        <a href="{{ url_for('progress', username=user.username) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-chart-line"></i> View Progress
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

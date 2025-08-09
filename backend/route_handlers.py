@@ -249,43 +249,16 @@ def assessment_panel():
             flash('User profile not found. Please create a profile first.', 'error')
             return redirect(url_for('profile'))
         
-        # Generate AI exercises for display
-        ai_exercises = [
-            {
-                'id': 1,
-                'title': 'Array Manipulation Challenge',
-                'description': 'Implement efficient array sorting and searching algorithms',
-                'difficulty': 'Medium',
-                'language': 'Python',
-                'estimated_time': 30
-            },
-            {
-                'id': 2,
-                'title': 'API Integration Task',
-                'description': 'Build a REST API client with error handling',
-                'difficulty': 'Easy',
-                'language': 'JavaScript',
-                'estimated_time': 20
-            },
-            {
-                'id': 3,
-                'title': 'Database Design Problem',
-                'description': 'Design and optimize database schema for e-commerce',
-                'difficulty': 'Hard',
-                'language': 'SQL',
-                'estimated_time': 45
-            },
-            {
-                'id': 4,
-                'title': 'Algorithm Optimization',
-                'description': 'Optimize recursive algorithms for better performance',
-                'difficulty': 'Hard',
-                'language': 'Python',
-                'estimated_time': 40
-            }
-        ]
+        # Generate skill-based assessment questions dynamically
+        assessment_questions = _generate_skill_based_assessment(user.skills)
         
-        return render_template('assessment_panel.html', user=user, ai_exercises=ai_exercises)
+        # Generate AI exercises for display based on user skills
+        ai_exercises = _generate_dynamic_exercises(user.skills)
+        
+        return render_template('assessment_panel.html', 
+                             user=user, 
+                             ai_exercises=ai_exercises,
+                             assessment_questions=assessment_questions)
     
     # POST request - process assessment responses
     try:
@@ -370,6 +343,172 @@ def _generate_assessment_recommendations(score: int, breakdown: Dict[str, Any]) 
         recommendations.append("Use more technical terminology to show your expertise.")
     
     return recommendations
+
+
+def _generate_skill_based_assessment(skills: str) -> List[Dict[str, Any]]:
+    """Generate assessment questions based on user's extracted skills."""
+    if not skills:
+        return []
+    
+    skill_list = [skill.strip().lower() for skill in skills.split(',')]
+    questions = []
+    
+    # Question bank based on different skills
+    skill_questions = {
+        'python': {
+            'question': 'Explain the difference between a list and a tuple in Python. When would you use each?',
+            'type': 'text',
+            'time_limit': 120,
+            'points': 15
+        },
+        'javascript': {
+            'question': 'What is event delegation in JavaScript and why is it useful?',
+            'type': 'text',
+            'time_limit': 120,
+            'points': 15
+        },
+        'react': {
+            'question': 'Explain the concept of virtual DOM in React and how it improves performance.',
+            'type': 'text',
+            'time_limit': 180,
+            'points': 20
+        },
+        'java': {
+            'question': 'What is the difference between abstract classes and interfaces in Java?',
+            'type': 'text',
+            'time_limit': 150,
+            'points': 18
+        },
+        'html': {
+            'question': 'What are semantic HTML elements and why are they important for accessibility?',
+            'type': 'text',
+            'time_limit': 90,
+            'points': 12
+        },
+        'css': {
+            'question': 'Explain the CSS box model and how margin, border, padding, and content relate.',
+            'type': 'text',
+            'time_limit': 90,
+            'points': 12
+        },
+        'api': {
+            'question': 'What is the difference between REST and GraphQL APIs? When would you choose one over the other?',
+            'type': 'text',
+            'time_limit': 180,
+            'points': 20
+        },
+        'machine learning': {
+            'question': 'Explain overfitting in machine learning and describe 3 techniques to prevent it.',
+            'type': 'text',
+            'time_limit': 240,
+            'points': 25
+        }
+    }
+    
+    # Generate questions for each skill found
+    for skill in skill_list:
+        if skill in skill_questions:
+            question_data = skill_questions[skill].copy()
+            question_data['id'] = f"q_{skill.replace(' ', '_')}"
+            question_data['skill'] = skill.title()
+            questions.append(question_data)
+    
+    # Add general programming questions if we have programming skills
+    programming_skills = ['python', 'javascript', 'java']
+    if any(skill in skill_list for skill in programming_skills):
+        questions.append({
+            'id': 'q_general_programming',
+            'question': 'Describe your approach to debugging a complex software issue. What tools and techniques do you use?',
+            'type': 'text',
+            'time_limit': 180,
+            'points': 15,
+            'skill': 'General Programming'
+        })
+    
+    return questions
+
+
+def _generate_dynamic_exercises(skills: str) -> List[Dict[str, Any]]:
+    """Generate coding exercises based on user's skills."""
+    if not skills:
+        return []
+    
+    skill_list = [skill.strip().lower() for skill in skills.split(',')]
+    exercises = []
+    
+    # Exercise templates based on skills
+    if 'python' in skill_list:
+        exercises.append({
+            'id': 1,
+            'title': 'Python Data Processing',
+            'description': 'Build a data analysis script that processes CSV files and generates insights',
+            'difficulty': 'Medium',
+            'language': 'Python',
+            'estimated_time': 45
+        })
+    
+    if 'javascript' in skill_list:
+        exercises.append({
+            'id': 2,
+            'title': 'JavaScript Algorithm Challenge',
+            'description': 'Implement efficient sorting and searching algorithms with optimal time complexity',
+            'difficulty': 'Medium',
+            'language': 'JavaScript',
+            'estimated_time': 35
+        })
+    
+    if 'react' in skill_list:
+        exercises.append({
+            'id': 3,
+            'title': 'React Component Library',
+            'description': 'Create reusable React components with hooks, state management, and TypeScript',
+            'difficulty': 'Hard',
+            'language': 'React/TypeScript',
+            'estimated_time': 60
+        })
+    
+    if 'java' in skill_list:
+        exercises.append({
+            'id': 4,
+            'title': 'Java Microservice Design',
+            'description': 'Design and implement a RESTful microservice with Spring Boot and JPA',
+            'difficulty': 'Hard',
+            'language': 'Java/Spring',
+            'estimated_time': 75
+        })
+    
+    if 'api' in skill_list:
+        exercises.append({
+            'id': 5,
+            'title': 'API Integration Challenge',
+            'description': 'Build a complete REST API with authentication, validation, and error handling',
+            'difficulty': 'Medium',
+            'language': 'Any',
+            'estimated_time': 50
+        })
+    
+    if 'machine learning' in skill_list:
+        exercises.append({
+            'id': 6,
+            'title': 'ML Model Deployment',
+            'description': 'Train, validate, and deploy a machine learning model with proper evaluation metrics',
+            'difficulty': 'Expert',
+            'language': 'Python/ML',
+            'estimated_time': 90
+        })
+    
+    # Add web development exercise if HTML/CSS skills present
+    if any(skill in skill_list for skill in ['html', 'css', 'javascript']):
+        exercises.append({
+            'id': 7,
+            'title': 'Responsive Web Application',
+            'description': 'Create a fully responsive web app with modern CSS and interactive JavaScript',
+            'difficulty': 'Medium',
+            'language': 'Web Technologies',
+            'estimated_time': 45
+        })
+    
+    return exercises
 
 
 # ============================================================================
