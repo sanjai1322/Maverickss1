@@ -53,4 +53,8 @@ with app.app_context():
 from backend.agent_integration import init_agent_system
 agent_system = init_agent_system(app)
 
+# Import route handlers
+from backend.route_handlers import *  # noqa: F401, F403
+import routes_hackathon_host  # noqa: F401
+
 logging.info("Flask application and agent system initialized")

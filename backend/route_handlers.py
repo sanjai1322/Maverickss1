@@ -478,11 +478,21 @@ def learning_path(username=None):
         # Get learning paths
         learning_paths = LearningPath.query.filter_by(username=username).all()
         
-        # If no learning paths exist, generate them
+        # If no learning paths exist, generate them based on skills
         if not learning_paths and user.skills:
+            logger.info(f"Generating learning paths for {username} based on skills: {user.skills}")
             learning_modules = generate_learning_paths(username, user.skills)
             save_learning_paths_to_db(learning_modules)
             learning_paths = LearningPath.query.filter_by(username=username).all()
+            
+            # Emit event to agent system for learning path generation
+            if hasattr(agent_system, 'event_bus'):
+                agent_system.event_bus.emit('learning.path_requested', {
+                    'username': username,
+                    'skills': user.skills.split(',') if user.skills else [],
+                    'generated_modules': len(learning_modules),
+                    'timestamp': datetime.utcnow().isoformat()
+                })
         
         # Calculate progress statistics
         total_modules = len(learning_paths)
@@ -531,7 +541,36 @@ def hackathon():
         submissions = Hackathon.query.filter_by(username=username)\
                                    .order_by(Hackathon.submitted_at.desc()).all()
         
-        return render_template('hackathon.html', user=user, submissions=submissions)
+        # Get top performers for leaderboard preview
+        top_users = User.query.order_by(User.total_points.desc()).limit(5).all()
+        
+        # Get live challenges data (could be from database in future)
+        live_challenges = [
+            {
+                'name': 'Weekly Sprint Challenge',
+                'description': 'Build a complete full-stack application in 7 days',
+                'participants': 47,
+                'points': 500,
+                'status': 'LIVE',
+                'color': 'warning',
+                'icon': 'clock'
+            },
+            {
+                'name': 'Algorithm Master',
+                'description': 'Solve 10 algorithmic challenges in optimal time',
+                'participants': 23,
+                'points': 300,
+                'status': 'ACTIVE',
+                'color': 'success',
+                'icon': 'brain'
+            }
+        ]
+        
+        return render_template('hackathon.html', 
+                             user=user, 
+                             submissions=submissions,
+                             top_users=top_users,
+                             live_challenges=live_challenges)
     
     # POST request - process hackathon submission
     try:
@@ -546,8 +585,11 @@ def hackathon():
             flash('Please provide a more detailed solution (at least 50 characters).', 'warning')
             return redirect(url_for('hackathon'))
         
-        # Basic scoring based on submission quality
+        # Enhanced scoring based on submission quality
         submission_score = _calculate_hackathon_score(submission)
+        
+        # Calculate points earned (score * multiplier)
+        points_earned = submission_score * 2  # 2x multiplier for hackathon submissions
         
         # Create hackathon submission record
         hackathon_submission = Hackathon(
@@ -558,11 +600,23 @@ def hackathon():
             submitted_at=datetime.utcnow()
         )
         db.session.add(hackathon_submission)
+        
+        # Update user points and gamification data
+        user = User.query.filter_by(username=username).first()
+        if user:
+            user.total_points = (user.total_points or 0) + points_earned
+            user.current_streak = (user.current_streak or 0) + 1
+            
+            # Level up logic
+            if user.total_points >= (user.current_level or 1) * 1000:
+                user.current_level = (user.current_level or 1) + 1
+                flash(f'🎉 Level up! You are now level {user.current_level}!', 'success')
+        
         db.session.commit()
         
-        logger.info(f"Hackathon submission by {username} - Challenge: {challenge_name}, Score: {submission_score}")
+        logger.info(f"Hackathon submission by {username} - Challenge: {challenge_name}, Score: {submission_score}, Points: {points_earned}")
         
-        flash(f'Hackathon submission successful! Score: {submission_score}/100', 'success')
+        flash(f'Hackathon submission successful! Score: {submission_score}/100 (+{points_earned} points)', 'success')
         return redirect(url_for('hackathon'))
         
     except Exception as e:
