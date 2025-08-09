@@ -47,6 +47,15 @@ from typing import Dict, List, Any, Optional, Tuple
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 
+# Import AI services
+try:
+    from ai_services import extract_skills_with_ai, generate_assessment_questions, generate_learning_path
+    AI_SERVICES_AVAILABLE = True
+    logger.info("AI services imported successfully")
+except ImportError as e:
+    logger.warning(f"AI services not available: {e}")
+    AI_SERVICES_AVAILABLE = False
+
 # Constants for file processing
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'doc', 'docx'}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB maximum file size

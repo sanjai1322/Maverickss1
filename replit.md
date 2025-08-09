@@ -53,16 +53,22 @@ Branding: "Mavericks" with rocket theme and blue gradient color scheme.
 - **Connection Management**: SQLAlchemy ORM with connection pooling and pre-ping for reliability
 
 ## AI/ML Components
+- **OpenAI GPT-4o Integration**: Primary AI engine using latest OpenAI model for:
+  - **Resume Analysis**: Intelligent skill extraction with contextual understanding
+  - **Assessment Generation**: Personalized coding questions tailored to user skills
+  - **Learning Path Creation**: AI-powered custom curricula with adaptive sequencing
+  - **Text Processing**: Advanced sentiment analysis and content quality assessment
 - **Agent-Based AI Integration**: Each agent incorporates AI capabilities for specialized tasks
-  - **ProfileAgent**: OpenRouter API and Hugging Face transformers for resume analysis and skill extraction
+  - **ProfileAgent**: OpenAI GPT-4o for resume analysis and intelligent skill extraction
   - **AssessmentAgent**: AI-powered exercise generation with automated solution evaluation
   - **LearningPathAgent**: Intelligent curriculum creation based on skill gaps and learning patterns
   - **GamificationAgent**: Smart engagement mechanics with adaptive difficulty and reward systems
   - **HackathonAgent**: Automated challenge generation and performance evaluation
   - **AnalyticsAgent**: Predictive insights and trend analysis for user behavior
+- **Hugging Face Integration**: Supporting NLP models for text embeddings and transformations
 - **Event-Driven AI Processing**: Agents respond to events with contextual AI analysis
-- **Fallback Systems**: Local processing when AI services are unavailable with graceful degradation
-- **Performance**: Efficient API integration with error handling and comprehensive logging
+- **Fallback Systems**: Keyword-based extraction when AI services unavailable with graceful degradation
+- **Performance**: Efficient OpenAI API integration with error handling and comprehensive logging
 
 ## Application Flow
 - **Agent-Driven User Journey**: Every user action triggers agent processing for intelligent responses

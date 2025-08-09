@@ -179,18 +179,27 @@ def api_progress_data():
 def ai_services_status():
     """Check AI services availability."""
     try:
-        # Basic AI service status check
+        # Import AI service status checker
+        from ai_services import get_ai_service_status
+        ai_status = get_ai_service_status()
+        
+        # Check OpenAI API key availability
+        import os
+        openai_available = bool(os.environ.get("OPENAI_API_KEY"))
+        
         services = {
-            'openrouter': True,  # Assume available
-            'huggingface': True,  # Assume available
-            'transformers': True  # Local library
+            'openai_gpt4o': openai_available,
+            'huggingface_transformers': True,
+            'local_transformers': True,
+            'keyword_extraction': True  # Always available fallback
         }
         
-        overall_status = 'online' if any(services.values()) else 'offline'
+        overall_status = 'online' if openai_available else 'limited'
         
         return jsonify({
             'status': overall_status,
             'services': services,
+            'ai_details': ai_status,
             'ai_agents': {
                 'profile_agent': True,
                 'assessment_agent': True,
@@ -198,6 +207,12 @@ def ai_services_status():
                 'gamification_agent': True,
                 'hackathon_agent': True,
                 'analytics_agent': True
+            },
+            'features': {
+                'ai_skill_extraction': openai_available,
+                'ai_question_generation': openai_available,
+                'ai_learning_paths': openai_available,
+                'keyword_fallback': True
             },
             'timestamp': datetime.utcnow().isoformat()
         })
@@ -406,13 +421,26 @@ def assessment_panel():
             flash('User profile not found. Please create a profile first.', 'error')
             return redirect(url_for('profile'))
         
-        # Generate skill-based assessment questions dynamically
-        assessment_questions = _generate_skill_based_assessment(user.skills) if user.skills else []
+        # Generate skill-based assessment questions using AI if available
+        try:
+            from ai_services import generate_assessment_questions
+            user_skills = user.skills.split(',') if user.skills else []
+            user_skills = [skill.strip() for skill in user_skills if skill.strip()]
+            
+            if user_skills:
+                ai_questions = generate_assessment_questions(user_skills, num_questions=8)
+                assessment_questions = ai_questions if ai_questions else _generate_skill_based_assessment(user.skills)
+                logger.info(f"Generated {len(assessment_questions)} AI-powered assessment questions for user {username}")
+            else:
+                assessment_questions = []
+                logger.info(f"No skills found for user {username}, no assessment questions generated")
+        except Exception as e:
+            logger.error(f"AI question generation failed: {e}")
+            assessment_questions = _generate_skill_based_assessment(user.skills) if user.skills else []
+            logger.info(f"Generated {len(assessment_questions)} fallback assessment questions for user {username}")
         
         # Generate AI exercises for display based on user skills
         ai_exercises = _generate_dynamic_exercises(user.skills) if user.skills else []
-        
-        logger.info(f"Generated {len(assessment_questions)} assessment questions for user {username}")
         logger.info(f"Generated {len(ai_exercises)} AI exercises for user {username}")
         
         return render_template('assessment_panel.html', 
