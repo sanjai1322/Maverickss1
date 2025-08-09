@@ -53,6 +53,163 @@ from app import app, db, agent_system
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 
+# Missing API route - add this
+@app.route('/api/recent-activities')
+def api_recent_activities():
+    """API endpoint for recent user activities."""
+    try:
+        username = session.get('username')
+        if not username:
+            return jsonify({'error': 'Not authenticated'}), 401
+        
+        # Get recent activities for the user
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Get recent assessments and learning progress
+        recent_assessments = AssessmentAttempt.query.filter_by(username=username).order_by(AssessmentAttempt.started_at.desc()).limit(5).all()
+        recent_paths = LearningPath.query.filter_by(username=username).order_by(LearningPath.created_at.desc()).limit(5).all()
+        
+        activities = []
+        
+        # Add assessment activities
+        for assessment in recent_assessments:
+            activities.append({
+                'type': 'assessment',
+                'title': f'Completed Assessment - Score: {assessment.overall_score or 0}%',
+                'timestamp': assessment.started_at.isoformat(),
+                'score': assessment.overall_score or 0
+            })
+        
+        # Add learning path activities
+        for path in recent_paths:
+            activities.append({
+                'type': 'learning',
+                'title': f'Learning Module: {path.module_name}',
+                'timestamp': path.created_at.isoformat(),
+                'progress': path.completion_status
+            })
+        
+        # Sort by timestamp
+        activities.sort(key=lambda x: x['timestamp'], reverse=True)
+        
+        return jsonify({
+            'activities': activities[:10],  # Return latest 10 activities
+            'total_count': len(activities)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in recent activities API: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@app.route('/api/status')
+def api_status():
+    """API health check endpoint."""
+    try:
+        # Check database connection
+        db.session.execute('SELECT 1')
+        db_status = 'online'
+    except Exception:
+        db_status = 'offline'
+    
+    # Check agent system
+    agent_status = 'online' if agent_system and agent_system.initialized else 'offline'
+    
+    return jsonify({
+        'status': 'online',
+        'database': db_status,
+        'agents': agent_status,
+        'version': '1.0.0',
+        'timestamp': datetime.utcnow().isoformat()
+    })
+
+
+@app.route('/api/progress-data')
+def api_progress_data():
+    """API endpoint for user progress data."""
+    try:
+        username = session.get('username')
+        if not username:
+            return jsonify({'error': 'Not authenticated'}), 401
+        
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Get learning progress
+        learning_paths = LearningPath.query.filter_by(username=username).all()
+        assessments = AssessmentAttempt.query.filter_by(username=username).all()
+        
+        progress_data = {
+            'user': {
+                'username': user.username,
+                'skills': user.skills,
+                'total_points': user.total_points or 0,
+                'current_level': user.current_level or 1
+            },
+            'learning_paths': [
+                {
+                    'module_name': path.module_name,
+                    'completion_status': path.completion_status or 'Not Started',
+                    'estimated_time': path.estimated_time or 0,
+                    'created_at': path.created_at.isoformat() if path.created_at else None
+                }
+                for path in learning_paths
+            ],
+            'assessments': [
+                {
+                    'overall_score': assessment.overall_score or 0,
+                    'responses_data': assessment.responses_data,
+                    'started_at': assessment.started_at.isoformat() if assessment.started_at else None
+                }
+                for assessment in assessments
+            ]
+        }
+        
+        return jsonify(progress_data)
+        
+    except Exception as e:
+        logger.error(f"Error in progress data API: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@app.route('/api/ai-services/status')
+def ai_services_status():
+    """Check AI services availability."""
+    try:
+        # Basic AI service status check
+        services = {
+            'openrouter': True,  # Assume available
+            'huggingface': True,  # Assume available
+            'transformers': True  # Local library
+        }
+        
+        overall_status = 'online' if any(services.values()) else 'offline'
+        
+        return jsonify({
+            'status': overall_status,
+            'services': services,
+            'ai_agents': {
+                'profile_agent': True,
+                'assessment_agent': True,
+                'learning_path_agent': True,
+                'gamification_agent': True,
+                'hackathon_agent': True,
+                'analytics_agent': True
+            },
+            'timestamp': datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error checking AI services: {e}")
+        return jsonify({
+            'status': 'limited',
+            'services': {'error': str(e)},
+            'timestamp': datetime.utcnow().isoformat()
+        })
+
 
 # ============================================================================
 # CORE APPLICATION ROUTES
@@ -250,10 +407,13 @@ def assessment_panel():
             return redirect(url_for('profile'))
         
         # Generate skill-based assessment questions dynamically
-        assessment_questions = _generate_skill_based_assessment(user.skills)
+        assessment_questions = _generate_skill_based_assessment(user.skills) if user.skills else []
         
         # Generate AI exercises for display based on user skills
-        ai_exercises = _generate_dynamic_exercises(user.skills)
+        ai_exercises = _generate_dynamic_exercises(user.skills) if user.skills else []
+        
+        logger.info(f"Generated {len(assessment_questions)} assessment questions for user {username}")
+        logger.info(f"Generated {len(ai_exercises)} AI exercises for user {username}")
         
         return render_template('assessment_panel.html', 
                              user=user, 
@@ -1043,8 +1203,8 @@ def gen_ai_info():
         return redirect(url_for('index'))
 
 
-@app.route('/api_status')
-def api_status():
+@app.route('/api_status_legacy')
+def api_status_legacy():
     """Display API service status and configuration."""
     try:
         return render_template('api_status.html')

@@ -2,6 +2,10 @@
 
 {% block title %}Learning Path - {{ user.username }}{% endblock %}
 
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/api-status.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">

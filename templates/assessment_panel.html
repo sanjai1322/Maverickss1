@@ -4,6 +4,30 @@
 
 {% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/assessment-timer.js') }}"></script>
+<script src="{{ url_for('static', filename='js/react-components.js') }}"></script>
+<script>
+// Initialize React components when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Assessment panel loaded');
+    
+    // Check if assessment questions exist
+    const questions = document.querySelectorAll('.assessment-question');
+    console.log('Found assessment questions:', questions.length);
+    
+    // Initialize the timer system
+    if (questions.length > 0) {
+        console.log('Initializing assessment timer system');
+        
+        // Initialize React components if available
+        if (typeof window.initReactComponents === 'function') {
+            const userSkills = '{{ user.skills if user.skills else "" }}'.split(',').map(s => s.trim()).filter(s => s);
+            window.initReactComponents('assessment-container', userSkills);
+        }
+    } else {
+        console.log('No assessment questions found - user may need to complete profile first');
+    }
+});
+</script>
 {% endblock %}
 
 {% block content %}
