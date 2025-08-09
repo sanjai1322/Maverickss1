@@ -42,15 +42,15 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 db.init_app(app)
 
 with app.app_context():
-    # Make sure to import the models here or their tables won't be created
-    import models  # noqa: F401
-    import models_admin  # noqa: F401
+    # Import reorganized models from backend
+    from backend.database import *  # noqa: F401, F403
+    from backend.admin_models import *  # noqa: F401, F403
     
     db.create_all()
     logging.info("Database tables created successfully")
 
 # Initialize agent system
-from agent_system import init_agent_system
+from backend.agent_integration import init_agent_system
 agent_system = init_agent_system(app)
 
 logging.info("Flask application and agent system initialized")

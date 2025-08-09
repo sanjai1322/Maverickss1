@@ -1,13 +1,8 @@
-from app import db
-from sqlalchemy import DateTime, Text, Integer, String, Boolean
-from datetime import datetime
+# Legacy models file - models have been moved to backend/database.py
+# This file is kept for backward compatibility
 
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True, nullable=False)
-    skills = db.Column(db.Text)  # JSON string of extracted skills
-    scores = db.Column(db.Text)  # JSON string of assessment scores and responses
+from backend.database import *
+from backend.admin_models import *
     resume_text = db.Column(db.Text)  # Original resume content
     created_at = db.Column(DateTime, default=datetime.utcnow)
     
