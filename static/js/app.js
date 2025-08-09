@@ -35,8 +35,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             textarea.addEventListener('input', updateCounter);
-            textarea.parentNode.appendChild(counter);
-            updateCounter();
+            if (textarea.parentNode) {
+                textarea.parentNode.appendChild(counter);
+                updateCounter();
+            }
         }
     });
     
@@ -53,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = JSON.parse(savedData);
                 Object.keys(data).forEach(function(key) {
                     const input = form.querySelector(`[name="${key}"]`);
-                    if (input && input.type !== 'submit') {
+                    if (input && input.type !== 'submit' && input.value !== undefined) {
                         input.value = data[key];
                     }
                 });

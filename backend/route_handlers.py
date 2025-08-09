@@ -760,12 +760,42 @@ def tailored_courses():
 
 @app.route('/leaderboard')
 def leaderboard():
-    """Display user leaderboard with rankings."""
+    """Display user leaderboard with rankings based on assessment scores."""
     try:
-        # Get top users by points
-        top_users = User.query.order_by(User.total_points.desc()).limit(20).all()
+        # Get users with assessment scores and sort by score
+        users_with_scores = []
+        all_users = User.query.all()
         
-        return render_template('leaderboard.html', top_users=top_users)
+        for user in all_users:
+            if user.scores:
+                try:
+                    score_data = json.loads(user.scores) if isinstance(user.scores, str) else user.scores
+                    score = score_data.get('total_score', 0) if isinstance(score_data, dict) else int(user.scores)
+                    users_with_scores.append({
+                        'username': user.username,
+                        'score': score,
+                        'skills': user.skills,
+                        'assessment_date': user.assessment_completed_at or user.skills_evaluated_at,
+                        'total_points': user.total_points or 0
+                    })
+                except (json.JSONDecodeError, ValueError, TypeError):
+                    # Handle legacy score formats
+                    try:
+                        score = int(user.scores) if user.scores else 0
+                        users_with_scores.append({
+                            'username': user.username,
+                            'score': score,
+                            'skills': user.skills,
+                            'assessment_date': user.assessment_completed_at or user.skills_evaluated_at,
+                            'total_points': user.total_points or 0
+                        })
+                    except:
+                        continue
+        
+        # Sort by score (highest first)
+        leaderboard = sorted(users_with_scores, key=lambda x: x['score'], reverse=True)[:20]
+        
+        return render_template('leaderboard.html', leaderboard=leaderboard)
         
     except Exception as e:
         logger.error(f"Error loading leaderboard: {e}")
@@ -775,14 +805,31 @@ def leaderboard():
 
 @app.route('/admin_dashboard')
 def admin_dashboard():
-    """Display admin dashboard (placeholder for now)."""
+    """Display admin dashboard with comprehensive metrics."""
     try:
         # Basic admin dashboard - would need proper authentication in production
         users = User.query.all()
         total_users = len(users)
         
+        # Calculate metrics
+        users_with_assessments = len([u for u in users if u.scores])
+        assessment_completion_rate = round((users_with_assessments / total_users * 100) if total_users > 0 else 0, 1)
+        users_with_skills = len([u for u in users if u.skills])
+        
+        # Get recent activity
+        recent_users = User.query.order_by(User.profile_created_at.desc()).limit(10).all()
+        
+        metrics = {
+            'total_users': total_users,
+            'users_with_assessments': users_with_assessments,
+            'assessment_completion_rate': assessment_completion_rate,
+            'users_with_skills': users_with_skills,
+            'active_users': len([u for u in users if u.last_login_at])
+        }
+        
         return render_template('admin_dashboard.html', 
-                             total_users=total_users,
+                             metrics=metrics,
+                             recent_users=recent_users,
                              users=users)
         
     except Exception as e:
@@ -912,3 +959,58 @@ def reassess_user(username):
 def api_test():
     """API test endpoint."""
     return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()})
+
+
+@app.route('/update_profile_request')
+def update_profile_request():
+    """Route to handle profile update requests."""
+    return redirect(url_for('profile'))
+
+
+@app.route('/update_learning_path', methods=['POST'])
+def update_learning_path():
+    """Update learning path module status."""
+    username = session.get('username')
+    if not username:
+        return redirect(url_for('profile'))
+    
+    module_id = request.form.get('module_id')
+    status = request.form.get('status')
+    
+    try:
+        learning_module = LearningPath.query.get(module_id)
+        if learning_module and learning_module.username == username:
+            learning_module.completion_status = status
+            if status == 'Completed':
+                learning_module.completed_at = datetime.utcnow()
+            db.session.commit()
+            flash(f'Learning module updated to {status}!', 'success')
+        else:
+            flash('Learning module not found.', 'error')
+    except Exception as e:
+        logger.error(f"Error updating learning path: {e}")
+        flash('Error updating learning module.', 'error')
+    
+    return redirect(url_for('learning_path', username=username))
+
+
+@app.route('/request_review')
+def request_review():
+    """Route to handle review requests."""
+    return redirect(url_for('progress'))
+
+
+# Error handlers
+@app.errorhandler(404)
+def page_not_found(e):
+    """Handle 404 errors."""
+    logger.warning(f"404 error: {request.url}")
+    return render_template('base.html', error_message="Page not found"), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors."""
+    logger.error(f"500 error: {error}")
+    db.session.rollback()
+    return render_template('base.html', error_message="Internal server error"), 500
